@@ -28,8 +28,13 @@ TICKERS = {
     "CL=F": "Crude Oil (WTI)",
     "^TNX": "US 10Y Treasury Yield",
     "SPY": "SPY ETF",
+    "RSP": "RSP ETF",
     "QQQ": "QQQ ETF",
+    "QQQE": "QQQE ETF",
     "IWM": "IWM ETF (Russell 2000)",
+    "XOP": "XOP ETF",
+    "XES": "XES ETF",
+    
 }
 
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "data", "market_data.json")
