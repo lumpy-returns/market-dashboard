@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #12161f;
+    --border: #232838;
+    --text: #e6e9f0;
+    --muted: #7a8296;
+    --up: #3ddc84;
+    --down: #ff5c5c;
+    --accent: #5b8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    padding: 24px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  #last-updated {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: right;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  th:first-child, td:first-child {
+    text-align: left;
+    color: var(--muted);
+    font-weight: normal;
+  }
+  th {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:last-child td { border-bottom: none; }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .neutral { color: var(--muted); }
+  #status {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 12px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Market Dashboard</h1>
+  <div id="last-updated">Loading...</div>
+</header>
+
+<div id="status">Fetching data/market_data.json ...</div>
+
+<table id="market-table" style="display:none;">
+  <thead>
+    <tr>
+      <th>Instrument</th>
+      <th>Price</th>
+      <th>1D %</th>
+      <th>1W %</th>
+      <th>YTD %</th>
+      <th>Off 52W High</th>
+    </tr>
+  </thead>
+  <tbody id="market-body"></tbody>
+</table>
+
+<script>
+function fmtPct(val) {
+  if (val === null || val === undefined) return '<span class="neutral">—</span>';
+  const cls = val > 0 ? 'up' : (val < 0 ? 'down' : 'neutral');
+  const sign = val > 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${val.toFixed(2)}%</span>`;
+}
+
+function fmtPrice(val) {
+  if (val === null || val === undefined) return '—';
+  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function loadData() {
+  const statusEl = document.getElementById('status');
+  const tableEl = document.getElementById('market-table');
+  const bodyEl = document.getElementById('market-body');
+  const updatedEl = document.getElementById('last-updated');
+
+  try {
+    // cache-bust so browsers/CDNs don't serve a stale copy of the JSON
+    const res = await fetch(`data/market_data.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const updated = new Date(data.last_updated_utc);
+    updatedEl.textContent = `Last updated: ${updated.toLocaleString()} UTC`;
+
+    bodyEl.innerHTML = '';
+    for (const [ticker, t] of Object.entries(data.tickers)) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${t.name} <span class="neutral">(${ticker})</span></td>
+        <td>${fmtPrice(t.price)}</td>
+        <td>${fmtPct(t.change_1d_pct)}</td>
+        <td>${fmtPct(t.change_1w_pct)}</td>
+        <td>${fmtPct(t.change_ytd_pct)}</td>
+        <td>${fmtPct(t.pct_from_52w_high)}</td>
+      `;
+      bodyEl.appendChild(row);
+    }
+
+    statusEl.style.display = 'none';
+    tableEl.style.display = 'table';
+  } catch (err) {
+    statusEl.textContent = `Could not load market data: ${err.message}. ` +
+      `If this is a fresh repo, run the GitHub Action once to generate data/market_data.json.`;
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
