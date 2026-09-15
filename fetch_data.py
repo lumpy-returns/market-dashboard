@@ -74,14 +74,13 @@ EQUITIES = {
         ("DIA", "DIA (Dow 30)"),
         ("IWM", "IWM (Russell 2000)"),
     ],
-    "sp500_submarket": [
+    "factor_etfs": [
         ("IWF", "iShares Russell 1000 Growth"),
         ("IWD", "iShares Russell 1000 Value"),
         ("QMOM", "Alpha Architect US Momentum"),
         ("QVAL", "Alpha Architect US Value"),
         ("IMOM", "Alpha Architect International Momentum"),
         ("IVAL", "Alpha Architect International Value"),
-        
         ("SPHB", "Invesco High Beta"),
         ("SPLV", "Invesco Low Volatility"),
     ],
