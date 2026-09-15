@@ -68,15 +68,20 @@ YIELD_TICKERS = {t for t, _ in MACRO["yields"]}
 EQUITIES = {
     "major_etfs": [
         ("SPY", "SPY (S&P 500)"),
+        ("RSP", "Invesco S&P Equal Weight"),
         ("QQQ", "QQQ (Nasdaq 100)"),
+        ("QQQE", "Direxion Nasdaq 100 Equal Weight"),
         ("DIA", "DIA (Dow 30)"),
         ("IWM", "IWM (Russell 2000)"),
     ],
     "sp500_submarket": [
         ("IWF", "iShares Russell 1000 Growth"),
         ("IWD", "iShares Russell 1000 Value"),
-        ("MTUM", "iShares MSCI Momentum"),
-        ("USMV", "iShares Min Volatility"),
+        ("QMOM", "Alpha Architect US Momentum"),
+        ("QVAL", "Alpha Architect US Value"),
+        ("IMOM", "Alpha Architect International Momentum"),
+        ("IVAL", "Alpha Architect International Value"),
+        
         ("SPHB", "Invesco High Beta"),
         ("SPLV", "Invesco Low Volatility"),
     ],
