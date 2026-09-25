@@ -14,8 +14,8 @@
     --muted: #7a8296;
     --up: #3ddc84;
     --down: #ff5c5c;
+    --neutral-dot: #e8b93d;
     --accent: #5b8cff;
-    --accent-dim: #2a3a5c;
   }
   * { box-sizing: border-box; }
   body {
@@ -33,47 +33,33 @@
     align-items: baseline;
     border-bottom: 1px solid var(--border);
     padding-bottom: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
   }
-  h1 {
-    font-size: 20px;
-    letter-spacing: 1px;
-    margin: 0;
-  }
+  h1 { font-size: 20px; letter-spacing: 1px; margin: 0; }
   #last-updated { color: var(--muted); font-size: 12px; }
   #status { color: var(--muted); font-size: 13px; padding: 24px 0; }
 
-  .section { margin-top: 40px; }
-  .section-head {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 4px;
-  }
-  .section-num {
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: bold;
-  }
-  .section-title { font-size: 16px; margin: 0; }
-  .section-sub {
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    margin: 0 0 16px 0;
-  }
-  .subtable-label {
-    color: var(--accent);
-    font-size: 12px;
-    margin: 24px 0 8px 0;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
+  .view-toggle { display: flex; gap: 8px; margin-bottom: 24px; }
+  .view-toggle button {
+    padding: 10px 20px;
     background: var(--panel);
     border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
   }
+  .view-toggle button.active { color: var(--accent); border-color: var(--accent); }
+
+  .section { margin-top: 40px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .section-num { color: var(--accent); font-size: 13px; font-weight: bold; }
+  .section-title { font-size: 16px; margin: 0; }
+  .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
+  .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
   th, td {
     padding: 9px 12px;
     text-align: right;
@@ -82,7 +68,7 @@
     white-space: nowrap;
   }
   th:first-child, td:first-child { text-align: left; }
-  td:first-child { color: var(--text); cursor: default; }
+  td:first-child { color: var(--text); }
   tr.has-holdings td:first-child { cursor: pointer; }
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
@@ -91,137 +77,31 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: normal;
+    cursor: pointer;
+    user-select: none;
   }
+  th.sortable:hover { color: var(--accent); }
+  th .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
   tr:last-child td { border-bottom: none; }
   .up { color: var(--up); }
   .down { color: var(--down); }
   .neutral { color: var(--muted); }
-  .holdings-row td {
-    background: var(--panel-hover);
-    text-align: left;
-    color: var(--muted);
-    font-size: 11.5px;
-    padding: 8px 12px;
-  }
   .holdings-row { display: none; }
   .holdings-row.open { display: table-row; }
-  .chip {
-    display: inline-block;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 2px 7px;
-    margin-right: 6px;
-    color: var(--text);
-  }
+  .holdings-row td { background: var(--panel-hover); text-align: left; color: var(--muted); font-size: 11.5px; padding: 8px 12px; }
+  .chip { display: inline-block; border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; margin-right: 6px; color: var(--text); }
 
-  .breadth-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-  }
-  .breadth-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 16px;
-  }
+  .breadth-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .breadth-card { background: var(--panel); border: 1px solid var(--border); padding: 16px; }
   .breadth-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
   .breadth-card .value { font-size: 22px; margin-top: 6px; }
 
-  /* ---- Position sizing calculator ---- */
-  .calc-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-  @media (max-width: 800px) { .calc-grid { grid-template-columns: 1fr; } }
-  .calc-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 20px;
-  }
-  .side-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
-  .side-toggle button {
-    flex: 1;
-    padding: 10px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  .side-toggle button.active.long { background: rgba(61,220,132,0.12); color: var(--up); border-color: var(--up); }
-  .side-toggle button.active.short { background: rgba(255,92,92,0.12); color: var(--down); border-color: var(--down); }
-
-  .field { margin-bottom: 14px; }
-  .field label {
-    display: block;
-    color: var(--muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-  .field input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-    padding: 9px 10px;
-  }
-  .field input:focus { outline: none; border-color: var(--accent); }
-
-  .stop-toggle { display: flex; gap: 8px; margin: 8px 0 16px 0; }
-  .stop-toggle button {
-    padding: 6px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: inherit;
-    font-size: 11px;
-    cursor: pointer;
-  }
-  .stop-toggle button.active { color: var(--accent); border-color: var(--accent); }
-
-  .result-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .result-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 12px;
-  }
-  .result-card .label { color: var(--muted); font-size: 10.5px; text-transform: uppercase; }
-  .result-card .value { font-size: 18px; margin-top: 4px; }
-  .result-card.hero { grid-column: span 2; }
-  .result-card.hero .value { font-size: 28px; color: var(--accent); }
-
-  .scale-bar {
-    position: relative;
-    height: 36px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    margin: 12px 0 20px 0;
-  }
-  .scale-marker {
-    position: absolute;
-    top: 0; bottom: 0;
-    width: 2px;
-  }
-  .scale-marker.entry { background: var(--accent); }
-  .scale-marker.stop { background: var(--down); }
-  .scale-label {
-    position: absolute;
-    top: -18px;
-    font-size: 9px;
-    color: var(--muted);
-    transform: translateX(-50%);
-  }
+  /* Traffic light dots */
+  .dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
+  .dot-green { background: var(--up); }
+  .dot-red { background: var(--down); }
+  .dot-yellow { background: var(--neutral-dot); }
+  td.dot-cell { text-align: center; }
 </style>
 </head>
 <body>
@@ -231,10 +111,24 @@
   <div id="last-updated">Loading...</div>
 </header>
 
+<div class="view-toggle">
+  <button id="view-btn-performance" class="active" onclick="setView('performance')">Performance</button>
+  <button id="view-btn-traffic" onclick="setView('traffic')">Traffic Light</button>
+</div>
+
 <div id="status">Fetching data/market_data.json ...</div>
 <div id="app" style="display:none;"></div>
 
 <script>
+// ---------------------------------------------------------------------
+// Global state
+// ---------------------------------------------------------------------
+let DATA = null;
+let currentView = 'performance';
+// per-table sort state, keyed by table id: { field, direction }
+const sortState = {};
+let tableCounter = 0;
+
 // ---------------------------------------------------------------------
 // Formatting helpers
 // ---------------------------------------------------------------------
@@ -268,42 +162,74 @@ function sparklineSvg(values) {
   const color = trendUp ? 'var(--up)' : 'var(--down)';
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
 }
+function dot(colorWord) {
+  return `<span class="dot dot-${colorWord}"></span>`;
+}
+function boolDot(val) {
+  return dot(val ? 'green' : 'red');
+}
 
 // ---------------------------------------------------------------------
-// Generic table renderer for instrument rows
+// Generic sortable table
 // ---------------------------------------------------------------------
-let holdingsRowCounter = 0;
+// columns: [{ label, field, type: 'text'|'num'|'bool'|'sparkline'|'dot', sortable }]
+const tableRegistry = {}; // tableId -> { rows, columns, nameLabel }
 
-function renderInstrumentTable(rows, opts) {
-  opts = opts || {};
-  const yieldMode = !!opts.yieldMode;
-  const priceLabel = opts.priceLabel || 'Price';
-  const priceDecimals = opts.priceDecimals ?? 2;
+function compareValues(a, b, type) {
+  if (type === 'bool') { a = a ? 1 : 0; b = b ? 1 : 0; }
+  if (a === null || a === undefined) return 1;
+  if (b === null || b === undefined) return -1;
+  if (typeof a === 'string') return a.localeCompare(b);
+  return a - b;
+}
 
-  let html = `<table><thead><tr>
-    <th>${opts.nameLabel || 'Instrument'}</th>
-    <th>${priceLabel}</th>
-    <th>${yieldMode ? '1D (bps)' : '1D %'}</th>
-    <th>1W %</th>
-    <th>52W Hi %</th>
-    <th>YTD %</th>
-    <th>5D</th>
-  </tr></thead><tbody>`;
+function renderTable(tableId) {
+  const { rows, columns, nameLabel } = tableRegistry[tableId];
+  const state = sortState[tableId] || { field: null, direction: 'desc' };
 
-  rows.forEach(r => {
+  let sortedRows = rows;
+  if (state.field) {
+    const col = columns.find(c => c.field === state.field);
+    sortedRows = [...rows].sort((a, b) => {
+      const cmp = compareValues(a[state.field], b[state.field], col.type);
+      return state.direction === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  let html = `<table id="${tableId}"><thead><tr>`;
+  columns.forEach(col => {
+    const isSorted = state.field === col.field;
+    const arrow = isSorted ? `<span class="sort-arrow">${state.direction === 'asc' ? '▲' : '▼'}</span>` : '';
+    const cls = col.sortable !== false ? 'sortable' : '';
+    const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
+    html += `<th class="${cls}" ${onclick}>${col.label}${arrow}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  sortedRows.forEach(r => {
     const hasHoldings = r.top_holdings && r.top_holdings.length > 0;
-    const rowId = `h${holdingsRowCounter++}`;
-    html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}')"` : ''}>
-      <td>${r.name} <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>
-      <td>${fmtPrice(r.price, priceDecimals)}</td>
-      <td>${yieldMode ? fmtBps(r.chg_1d_bps) : fmtPct(r.chg_1d_pct)}</td>
-      <td>${fmtPct(r.chg_1w_pct)}</td>
-      <td>${fmtPct(r.pct_from_52w_high)}</td>
-      <td>${fmtPct(r.chg_ytd_pct)}</td>
-      <td>${sparklineSvg(r.sparkline)}</td>
-    </tr>`;
+    const rowId = `hold-${tableCounter++}`;
+    html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}')"` : ''}>`;
+    columns.forEach(col => {
+      if (col.field === 'name') {
+        html += `<td>${r.name} <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
+      } else if (col.type === 'sparkline') {
+        html += `<td>${sparklineSvg(r.sparkline)}</td>`;
+      } else if (col.type === 'dot') {
+        html += `<td class="dot-cell">${dot(r[col.field])}</td>`;
+      } else if (col.type === 'bool') {
+        html += `<td class="dot-cell">${boolDot(r[col.field])}</td>`;
+      } else if (col.type === 'price') {
+        html += `<td>${fmtPrice(r[col.field], col.decimals)}</td>`;
+      } else if (col.type === 'bps') {
+        html += `<td>${fmtBps(r[col.field])}</td>`;
+      } else {
+        html += `<td>${fmtPct(r[col.field])}</td>`;
+      }
+    });
+    html += '</tr>';
     if (hasHoldings) {
-      html += `<tr class="holdings-row" id="${rowId}"><td colspan="7">
+      html += `<tr class="holdings-row" id="${rowId}"><td colspan="${columns.length}">
         Top holdings: ${r.top_holdings.map(h => `<span class="chip">${h}</span>`).join('')}
       </td></tr>`;
     }
@@ -313,65 +239,98 @@ function renderInstrumentTable(rows, opts) {
   return html;
 }
 
+function handleSort(tableId, field) {
+  const current = sortState[tableId] || { field: null, direction: 'desc' };
+  if (current.field === field) {
+    sortState[tableId] = { field, direction: current.direction === 'desc' ? 'asc' : 'desc' };
+  } else {
+    sortState[tableId] = { field, direction: 'desc' };
+  }
+  const el = document.getElementById(tableId);
+  el.outerHTML = renderTable(tableId);
+}
+
 function toggleHoldings(rowId) {
   const row = document.getElementById(rowId);
   if (row) row.classList.toggle('open');
 }
 
-function sortByField(rows, field) {
-  return [...rows].sort((a, b) => (b[field] ?? -999) - (a[field] ?? -999));
+function makeTable(rows, columns) {
+  const tableId = `tbl-${tableCounter++}`;
+  tableRegistry[tableId] = { rows, columns };
+  return `<div style="overflow-x:auto;">${renderTable(tableId)}</div>`;
 }
+
+// ---------------------------------------------------------------------
+// Column definitions
+// ---------------------------------------------------------------------
+function performanceColumns(yieldMode) {
+  return [
+    { label: 'Instrument', field: 'name', type: 'text', sortable: false },
+    { label: 'Price', field: 'price', type: 'price' },
+    { label: yieldMode ? '1D (bps)' : '1D %', field: yieldMode ? 'chg_1d_bps' : 'chg_1d_pct', type: yieldMode ? 'bps' : 'pct' },
+    { label: '1W %', field: 'chg_1w_pct', type: 'pct' },
+    { label: '1M %', field: 'chg_1m_pct', type: 'pct' },
+    { label: '3M %', field: 'chg_3m_pct', type: 'pct' },
+    { label: '1Y %', field: 'chg_1y_pct', type: 'pct' },
+    { label: '52W Hi %', field: 'pct_from_52w_high', type: 'pct' },
+    { label: '5D', field: 'sparkline', type: 'sparkline', sortable: false },
+  ];
+}
+
+const trafficColumns = [
+  { label: 'Instrument', field: 'name', type: 'text', sortable: false },
+  { label: 'Trend', field: 'trend', type: 'dot' },
+  { label: '10 EMA > 20 EMA', field: 'cond_10_gt_20', type: 'bool' },
+  { label: 'Low > 20 EMA', field: 'cond_low_gt_20', type: 'bool' },
+  { label: 'Low > 10 EMA', field: 'cond_low_gt_10', type: 'bool' },
+];
 
 // ---------------------------------------------------------------------
 // Section builders
 // ---------------------------------------------------------------------
-function buildMacroSection(macro) {
-  const groups = [
-    ['us_index_futures', 'US Index Futures'],
-    ['vol_dollar', 'Volatility & Dollar'],
-    ['crypto', 'Crypto'],
-    ['metals', 'Precious & Base Metals'],
-    ['energy', 'Energy Commodities'],
-    ['yields', 'US Treasury Yields'],
-    ['global_indices', 'Global Market Indices'],
-  ];
+const MACRO_GROUPS = [
+  ['us_index_futures', 'US Index Futures'],
+  ['vol_dollar', 'Volatility & Dollar'],
+  ['crypto', 'Crypto'],
+  ['metals', 'Precious & Base Metals'],
+  ['energy', 'Energy Commodities'],
+  ['yields', 'US Treasury Yields'],
+  ['global_indices', 'Global Market Indices'],
+];
+const EQUITIES_GROUPS = [
+  ['major_etfs', 'Major ETF Stats'],
+  ['sp500_submarket', 'S&P 500 Sub-Market — Style Factors'],
+  ['sectors', 'S&P 500 Sectors'],
+  ['sectors_ew', 'S&P 500 Equal-Weight Sectors'],
+  ['themes', 'Top Thematic ETFs'],
+  ['countries', 'Country ETFs'],
+];
+
+function buildPerformanceView(data) {
   let html = `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro Overview</h2></div>
-    <p class="section-sub">EOD SNAPSHOT · PREV CLOSE · BY CATEGORY</p>`;
-  groups.forEach(([key, label]) => {
-    const rows = macro[key] || [];
+    <p class="section-sub">EOD SNAPSHOT · CLICK ANY COLUMN HEADER TO SORT</p>`;
+  MACRO_GROUPS.forEach(([key, label]) => {
+    const rows = (data.macro || {})[key] || [];
     if (rows.length === 0) return;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += renderInstrumentTable(rows, { yieldMode: key === 'yields' });
+    html += makeTable(rows, performanceColumns(key === 'yields'));
   });
   html += '</div>';
-  return html;
-}
 
-function buildEquitiesSection(equities) {
-  const groups = [
-    ['major_etfs', 'Major ETF Stats', null],
-    ['factor_etfs', 'Sub-Market — Style Factors', 'chg_1w_pct'],
-    ['sectors', 'S&P 500 Sectors — Ranked by 1W', 'chg_1w_pct'],
-    ['sectors_ew', 'S&P 500 Equal-Weight Sectors — Ranked by 1W', 'chg_1w_pct'],
-    ['themes', 'Top Thematic ETFs — Ranked by 1W', 'chg_1w_pct'],
-    ['countries', 'Country ETFs — Ranked by 1W', 'chg_1w_pct'],
-  ];
-  let html = `<div class="section">
+  html += `<div class="section">
     <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities Overview</h2></div>
-    <p class="section-sub">RANKED BY 1W PERFORMANCE WHERE APPLICABLE</p>`;
-  groups.forEach(([key, label, sortField]) => {
-    let rows = equities[key] || [];
+    <p class="section-sub">CLICK ANY COLUMN HEADER TO SORT</p>`;
+  EQUITIES_GROUPS.forEach(([key, label]) => {
+    const rows = (data.equities || {})[key] || [];
     if (rows.length === 0) return;
-    if (sortField) rows = sortByField(rows, sortField);
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += renderInstrumentTable(rows, {});
+    html += makeTable(rows, performanceColumns(false));
   });
   html += '</div>';
-  return html;
-}
 
-function buildBreadthSection(breadth) {
+  const breadth = data.breadth || {};
   const cards = [
     ['1D Breadth (% Positive)', breadth.pct_positive_1d != null ? breadth.pct_positive_1d.toFixed(1) + '%' : '—'],
     ['1W Breadth (% Positive)', breadth.pct_positive_1w != null ? breadth.pct_positive_1w.toFixed(1) + '%' : '—'],
@@ -379,7 +338,7 @@ function buildBreadthSection(breadth) {
     ['Sentiment', breadth.sentiment_label || '—'],
     ['Tracked Instruments', breadth.tracked_instruments ?? '—'],
   ];
-  let html = `<div class="section">
+  html += `<div class="section">
     <div class="section-head"><span class="section-num">03</span><h2 class="section-title">Market Breadth &amp; Sentiment</h2></div>
     <p class="section-sub">DERIVED FROM TRACKED ETF/SECTOR UNIVERSE · NOT A FULL NYSE ADVANCE/DECLINE LINE</p>
     <div class="breadth-cards">`;
@@ -387,144 +346,52 @@ function buildBreadthSection(breadth) {
     html += `<div class="breadth-card"><div class="label">${label}</div><div class="value">${value}</div></div>`;
   });
   html += '</div></div>';
+
   return html;
 }
 
-// ---------------------------------------------------------------------
-// Position Sizing Calculator (pure client-side, no market data needed)
-// ---------------------------------------------------------------------
-function buildCalculatorSection() {
-  return `<div class="section">
-    <div class="section-head"><span class="section-num">04</span><h2 class="section-title">Position Sizing Calculator</h2></div>
-    <p class="section-sub">RISK-BASED · STAGGERED STOPS</p>
-    <div class="calc-grid">
-      <div class="calc-panel">
-        <div class="side-toggle">
-          <button id="side-long" class="active long" onclick="setSide('long')">▲ LONG</button>
-          <button id="side-short" class="short" onclick="setSide('short')">▼ SHORT</button>
-        </div>
-        <div class="field"><label>Account Equity (USD)</label><input type="number" id="calc-equity" value="30000" oninput="runCalc()"></div>
-        <div class="field"><label>Risk per Trade (%)</label><input type="number" id="calc-risk-pct" value="2" step="0.1" oninput="runCalc()"></div>
-        <div class="field"><label>Entry Price ($)</label><input type="number" id="calc-entry" value="100" step="0.01" oninput="runCalc()"></div>
-        <div class="field"><label>Stop Loss ($)</label><input type="number" id="calc-stop" value="95" step="0.01" oninput="runCalc()"></div>
-        <div class="field"><label>Ticker (optional)</label><input type="text" id="calc-ticker" placeholder="e.g. AAPL"></div>
-      </div>
-      <div class="calc-panel">
-        <div class="result-grid">
-          <div class="result-card hero"><div class="label">Shares to Trade</div><div class="value" id="res-shares">—</div></div>
-          <div class="result-card"><div class="label">Max Risk $</div><div class="value" id="res-maxrisk">—</div></div>
-          <div class="result-card"><div class="label">Position Value</div><div class="value" id="res-posvalue">—</div></div>
-          <div class="result-card"><div class="label">Risk / Share</div><div class="value" id="res-riskshare">—</div></div>
-          <div class="result-card"><div class="label">% Equity</div><div class="value" id="res-pctequity">—</div></div>
-        </div>
-
-        <div class="subtable-label">▸ Staggered Stop Levels</div>
-        <div class="stop-toggle">
-          <button id="stop-2" class="active" onclick="setStopCount(2)">2-STOP</button>
-          <button id="stop-3" onclick="setStopCount(3)">3-STOP</button>
-        </div>
-        <div class="scale-bar" id="scale-bar"></div>
-        <table>
-          <thead><tr><th>Level</th><th>Price</th><th>Shares Removed</th><th>% of Position</th><th>P&amp;L at Stop</th></tr></thead>
-          <tbody id="stop-levels-body"></tbody>
-        </table>
-
-        <div class="subtable-label">▸ R:R Targets</div>
-        <table>
-          <thead><tr><th>Target</th><th>Price</th><th>Reward $</th></tr></thead>
-          <tbody id="rr-targets-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>`;
-}
-
-let calcSide = 'long';
-let calcStopCount = 2;
-
-function setSide(side) {
-  calcSide = side;
-  document.getElementById('side-long').classList.toggle('active', side === 'long');
-  document.getElementById('side-short').classList.toggle('active', side === 'short');
-  runCalc();
-}
-function setStopCount(n) {
-  calcStopCount = n;
-  document.getElementById('stop-2').classList.toggle('active', n === 2);
-  document.getElementById('stop-3').classList.toggle('active', n === 3);
-  runCalc();
-}
-
-function money(v) {
-  if (!isFinite(v)) return '—';
-  return '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function runCalc() {
-  const equity = parseFloat(document.getElementById('calc-equity').value) || 0;
-  const riskPct = parseFloat(document.getElementById('calc-risk-pct').value) || 0;
-  const entry = parseFloat(document.getElementById('calc-entry').value) || 0;
-  const stop = parseFloat(document.getElementById('calc-stop').value) || 0;
-
-  const riskPerShare = Math.abs(entry - stop);
-  const maxRisk = equity * (riskPct / 100);
-  const shares = riskPerShare > 0 ? Math.floor(maxRisk / riskPerShare) : 0;
-  const positionValue = shares * entry;
-  const pctEquity = equity > 0 ? (positionValue / equity) * 100 : 0;
-
-  document.getElementById('res-shares').textContent = shares.toLocaleString();
-  document.getElementById('res-maxrisk').textContent = money(maxRisk);
-  document.getElementById('res-posvalue').textContent = money(positionValue);
-  document.getElementById('res-riskshare').textContent = money(riskPerShare);
-  document.getElementById('res-pctequity').textContent = pctEquity.toFixed(1) + '%';
-
-  // Staggered stop levels: distribute exit evenly across N price levels
-  // between entry and the final stop.
-  const stopBody = document.getElementById('stop-levels-body');
-  stopBody.innerHTML = '';
-  const n = calcStopCount;
-  const sharesPerLevel = Math.floor(shares / n);
-  let remaining = shares;
-  for (let i = 1; i <= n; i++) {
-    const frac = i / n;
-    const levelPrice = calcSide === 'long'
-      ? entry - frac * riskPerShare
-      : entry + frac * riskPerShare;
-    const sharesRemoved = (i === n) ? remaining : sharesPerLevel;
-    remaining -= sharesRemoved;
-    const pctOfPosition = shares > 0 ? (sharesRemoved / shares) * 100 : 0;
-    const pnl = calcSide === 'long'
-      ? sharesRemoved * (levelPrice - entry)
-      : sharesRemoved * (entry - levelPrice);
-    stopBody.innerHTML += `<tr>
-      <td>Stop ${i}</td>
-      <td>${money(levelPrice)}</td>
-      <td>${sharesRemoved.toLocaleString()}</td>
-      <td>${pctOfPosition.toFixed(0)}%</td>
-      <td>${fmtPct(pnl >= 0 ? Math.abs(pnl) / (equity || 1) * 100 : -Math.abs(pnl) / (equity || 1) * 100)} <span class="neutral">(${money(pnl)})</span></td>
-    </tr>`;
-  }
-
-  // R:R targets at 1R, 2R, 3R
-  const rrBody = document.getElementById('rr-targets-body');
-  rrBody.innerHTML = '';
-  [1, 2, 3].forEach(r => {
-    const targetPrice = calcSide === 'long'
-      ? entry + r * riskPerShare
-      : entry - r * riskPerShare;
-    const reward = shares * r * riskPerShare;
-    rrBody.innerHTML += `<tr><td>${r}R</td><td>${money(targetPrice)}</td><td class="up">${money(reward)}</td></tr>`;
+function buildTrafficView(data) {
+  let html = `<div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro — Trend Signals</h2></div>
+    <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&gt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW</p>`;
+  MACRO_GROUPS.forEach(([key, label]) => {
+    const rows = (data.macro || {})[key] || [];
+    if (rows.length === 0) return;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, trafficColumns);
   });
+  html += '</div>';
 
-  // Scale-out visualization bar
-  const bar = document.getElementById('scale-bar');
-  bar.innerHTML = '';
-  const lo = Math.min(entry, stop), hi = Math.max(entry, stop);
-  const range = (hi - lo) || 1;
-  const entryPct = ((entry - lo) / range) * 100;
-  const stopPct = ((stop - lo) / range) * 100;
-  bar.innerHTML += `<div class="scale-marker entry" style="left:${entryPct}%"><span class="scale-label" style="left:0">Entry</span></div>`;
-  bar.innerHTML += `<div class="scale-marker stop" style="left:${stopPct}%"><span class="scale-label" style="left:0">Stop</span></div>`;
+  html += `<div class="section">
+    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities — Trend Signals</h2></div>
+    <p class="section-sub">CLICK ANY COLUMN HEADER TO SORT</p>`;
+  EQUITIES_GROUPS.forEach(([key, label]) => {
+    const rows = (data.equities || {})[key] || [];
+    if (rows.length === 0) return;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, trafficColumns);
+  });
+  html += '</div>';
+
+  return html;
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('view-btn-performance').classList.toggle('active', view === 'performance');
+  document.getElementById('view-btn-traffic').classList.toggle('active', view === 'traffic');
+  renderApp();
+}
+
+function renderApp() {
+  if (!DATA) return;
+  // reset per-render state so table ids/sort don't collide across views
+  Object.keys(tableRegistry).forEach(k => delete tableRegistry[k]);
+  Object.keys(sortState).forEach(k => delete sortState[k]);
+  tableCounter = 0;
+
+  const appEl = document.getElementById('app');
+  appEl.innerHTML = currentView === 'performance' ? buildPerformanceView(DATA) : buildTrafficView(DATA);
 }
 
 // ---------------------------------------------------------------------
@@ -539,6 +406,7 @@ async function loadData() {
     const res = await fetch(`data/market_data.json?t=${Date.now()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    DATA = data;
 
     if (data.last_updated_utc) {
       updatedEl.textContent = `Last updated: ${new Date(data.last_updated_utc).toLocaleString()} UTC`;
@@ -546,23 +414,12 @@ async function loadData() {
       updatedEl.textContent = 'No data yet — run the GitHub Action once';
     }
 
-    let html = '';
-    html += buildMacroSection(data.macro || {});
-    html += buildEquitiesSection(data.equities || {});
-    html += buildBreadthSection(data.breadth || {});
-    html += buildCalculatorSection();
-    appEl.innerHTML = html;
-
+    renderApp();
     statusEl.style.display = 'none';
     appEl.style.display = 'block';
-    runCalc();
   } catch (err) {
     statusEl.textContent = `Could not load market data: ${err.message}. ` +
       `If this is a fresh repo, run the GitHub Action once to generate data/market_data.json.`;
-    // Still show the calculator even if market data hasn't loaded yet.
-    appEl.innerHTML = buildCalculatorSection();
-    appEl.style.display = 'block';
-    runCalc();
   }
 }
 
