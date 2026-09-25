@@ -101,7 +101,7 @@
   .dot-green { background: var(--up); }
   .dot-red { background: var(--down); }
   .dot-yellow { background: var(--neutral-dot); }
-  td.dot-cell { text-align: center; }
+  th.center-cell, td.center-cell { text-align: center; }
 </style>
 </head>
 <body>
@@ -200,9 +200,10 @@ function renderTable(tableId) {
   columns.forEach(col => {
     const isSorted = state.field === col.field;
     const arrow = isSorted ? `<span class="sort-arrow">${state.direction === 'asc' ? '▲' : '▼'}</span>` : '';
-    const cls = col.sortable !== false ? 'sortable' : '';
+    const sortCls = col.sortable !== false ? 'sortable' : '';
+    const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell' : '';
     const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
-    html += `<th class="${cls}" ${onclick}>${col.label}${arrow}</th>`;
+    html += `<th class="${sortCls} ${alignCls}" ${onclick}>${col.label}${arrow}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -214,11 +215,11 @@ function renderTable(tableId) {
       if (col.field === 'name') {
         html += `<td>${r.name} <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
-        html += `<td>${sparklineSvg(r.sparkline)}</td>`;
+        html += `<td class="center-cell">${sparklineSvg(r.sparkline)}</td>`;
       } else if (col.type === 'dot') {
-        html += `<td class="dot-cell">${dot(r[col.field])}</td>`;
+        html += `<td class="center-cell">${dot(r[col.field])}</td>`;
       } else if (col.type === 'bool') {
-        html += `<td class="dot-cell">${boolDot(r[col.field])}</td>`;
+        html += `<td class="center-cell">${boolDot(r[col.field])}</td>`;
       } else if (col.type === 'price') {
         html += `<td>${fmtPrice(r[col.field], col.decimals)}</td>`;
       } else if (col.type === 'bps') {
