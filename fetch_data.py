@@ -233,7 +233,7 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
 
     if cond_10_gt_20 and cond_low_gt_20:
         trend = "green"
-    elif cond_10_gt_20 and cond_high_lt_20:
+    elif (not cond_10_gt_20) and cond_high_lt_20:
         trend = "red"
     else:
         trend = "yellow"
