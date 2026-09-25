@@ -16,6 +16,7 @@ import json
 import os
 from datetime import datetime, timezone
 
+import pandas as pd
 import yfinance as yf
 
 # ---------------------------------------------------------------------------
@@ -195,16 +196,20 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
     if closes is None or closes.empty:
         return None
 
-    closes = closes.dropna()
-    if closes.empty:
+    # Align close/high/low on the same dates before computing anything.
+    # Dropping NaNs from each series independently can desync them if Yahoo
+    # has a gap in only one of the three columns (common for less-liquid
+    # futures) -- that desync was the cause of "today's high" silently
+    # pulling a stale, out-of-date value, which made the Red trend condition
+    # fire far too often.
+    combined = pd.DataFrame({"close": closes, "high": highs, "low": lows}).dropna()
+    if combined.empty:
         return None
-    highs = highs.dropna() if highs is not None else closes
-    lows = lows.dropna() if lows is not None else closes
 
     scale = 10.0 if is_yield else 1.0  # correct Yahoo's 10x yield quoting convention
-    closes = closes / scale
-    highs = highs / scale
-    lows = lows / scale
+    closes = combined["close"] / scale
+    highs = combined["high"] / scale
+    lows = combined["low"] / scale
 
     last_price = float(closes.iloc[-1])
     prev_close = offset_price(closes, 1)
@@ -292,10 +297,17 @@ def build_section(pairs, series_by_ticker):
     rows = []
     for ticker, name in pairs:
         s = series_by_ticker.get(ticker, {})
-        entry = build_instrument(
-            ticker, name, s.get("close"), s.get("high"), s.get("low"),
-            is_yield=(ticker in YIELD_TICKERS),
-        )
+        try:
+            entry = build_instrument(
+                ticker, name, s.get("close"), s.get("high"), s.get("low"),
+                is_yield=(ticker in YIELD_TICKERS),
+            )
+        except Exception as exc:
+            # One bad ticker should never take down the whole run -- log it
+            # and move on, rather than crashing the script (which would leave
+            # the site silently serving yesterday's stale JSON).
+            print(f"FAIL {ticker:12s} {name}: {exc}")
+            entry = None
         if entry:
             rows.append(entry)
         else:
