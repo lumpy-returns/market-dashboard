@@ -166,8 +166,8 @@ function sparklineSvg(values) {
 function dot(colorWord) {
   return `<span class="dot dot-${colorWord}"></span>`;
 }
-function boolDot(val) {
-  return dot(val ? 'green' : 'grey');
+function boolDot(val, falseColor) {
+  return dot(val ? 'green' : (falseColor || 'grey'));
 }
 
 // ---------------------------------------------------------------------
@@ -220,7 +220,7 @@ function renderTable(tableId) {
       } else if (col.type === 'dot') {
         html += `<td class="center-cell">${dot(r[col.field])}</td>`;
       } else if (col.type === 'bool') {
-        html += `<td class="center-cell">${boolDot(r[col.field])}</td>`;
+        html += `<td class="center-cell">${boolDot(r[col.field], col.falseColor)}</td>`;
       } else if (col.type === 'price') {
         html += `<td>${fmtPrice(r[col.field], col.decimals)}</td>`;
       } else if (col.type === 'bps') {
@@ -283,7 +283,7 @@ function performanceColumns(yieldMode) {
 const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
   { label: 'Trend', field: 'trend', type: 'dot' },
-  { label: '10 EMA > 20 EMA', field: 'cond_10_gt_20', type: 'bool' },
+  { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'Low > 20 EMA', field: 'cond_low_gt_20', type: 'bool' },
   { label: 'Low > 10 EMA', field: 'cond_low_gt_10', type: 'bool' },
 ];
