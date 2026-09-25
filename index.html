@@ -411,7 +411,13 @@ async function loadData() {
     DATA = data;
 
     if (data.last_updated_utc) {
-      updatedEl.textContent = `Last updated: ${new Date(data.last_updated_utc).toLocaleString()} UTC`;
+      const updated = new Date(data.last_updated_utc);
+      const formatted = updated.toLocaleString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+      updatedEl.textContent = `Last updated: ${formatted} PT`;
     } else {
       updatedEl.textContent = 'No data yet — run the GitHub Action once';
     }
