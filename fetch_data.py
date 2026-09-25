@@ -1,7 +1,12 @@
 """
 fetch_data.py
-Pulls a full set of macro + equities data from Yahoo Finance (via yfinance,
-no API key needed) and writes it to data/market_data.json.
+Pulls macro + equities data from Yahoo Finance (via yfinance, no API key needed)
+and writes it to data/market_data.json.
+
+Each instrument gets:
+  - price, 1D/1W/1M/3M/1Y % change, % from 52W high, 5-day sparkline
+  - EMA-based trend signal (10 EMA vs 20 EMA, low/high vs 20 EMA) for the
+    "Traffic Light" view
 
 Run manually with:  python fetch_data.py
 GitHub Actions runs this automatically on a schedule (.github/workflows/refresh.yml).
@@ -68,19 +73,15 @@ YIELD_TICKERS = {t for t, _ in MACRO["yields"]}
 EQUITIES = {
     "major_etfs": [
         ("SPY", "SPY (S&P 500)"),
-        ("RSP", "Invesco S&P Equal Weight"),
         ("QQQ", "QQQ (Nasdaq 100)"),
-        ("QQQE", "Direxion Nasdaq 100 Equal Weight"),
         ("DIA", "DIA (Dow 30)"),
         ("IWM", "IWM (Russell 2000)"),
     ],
-    "factor_etfs": [
+    "sp500_submarket": [
         ("IWF", "iShares Russell 1000 Growth"),
         ("IWD", "iShares Russell 1000 Value"),
-        ("QMOM", "Alpha Architect US Momentum"),
-        ("QVAL", "Alpha Architect US Value"),
-        ("IMOM", "Alpha Architect International Momentum"),
-        ("IVAL", "Alpha Architect International Value"),
+        ("MTUM", "iShares MSCI Momentum"),
+        ("USMV", "iShares Min Volatility"),
         ("SPHB", "Invesco High Beta"),
         ("SPLV", "Invesco Low Volatility"),
     ],
@@ -179,25 +180,58 @@ def pct_change(new, old):
     return round((new - old) / old * 100, 2)
 
 
-def build_instrument(ticker, name, closes, is_yield=False):
-    """Compute display stats for one ticker from its closing-price series."""
+def offset_price(series, offset):
+    """Price `offset` trading days ago. Falls back to the earliest available
+    price if the series doesn't go back that far."""
+    if series is None or series.empty:
+        return None
+    if len(series) > offset:
+        return float(series.iloc[-(offset + 1)])
+    return float(series.iloc[0])
+
+
+def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
+    """Compute display stats + trend signal for one ticker."""
     if closes is None or closes.empty:
         return None
 
     closes = closes.dropna()
     if closes.empty:
         return None
+    highs = highs.dropna() if highs is not None else closes
+    lows = lows.dropna() if lows is not None else closes
 
-    if is_yield:
-        closes = closes / 10.0  # correct Yahoo's 10x quoting convention
+    scale = 10.0 if is_yield else 1.0  # correct Yahoo's 10x yield quoting convention
+    closes = closes / scale
+    highs = highs / scale
+    lows = lows / scale
 
     last_price = float(closes.iloc[-1])
-    prev_close = float(closes.iloc[-2]) if len(closes) > 1 else None
-    week_ago = float(closes.iloc[-6]) if len(closes) > 6 else None
-    this_year = closes[closes.index.year == datetime.now().year]
-    ytd_start = float(this_year.iloc[0]) if not this_year.empty else None
+    prev_close = offset_price(closes, 1)
+    week_ago = offset_price(closes, 5)
+    month_ago = offset_price(closes, 21)
+    three_month_ago = offset_price(closes, 63)
+    year_ago = offset_price(closes, 252)
     high_52w = float(closes.max())
     sparkline = [round(v, 2) for v in closes.iloc[-5:].tolist()]
+
+    # --- EMA-based trend signal ---
+    ema10 = closes.ewm(span=10, adjust=False).mean().iloc[-1]
+    ema20 = closes.ewm(span=20, adjust=False).mean().iloc[-1]
+    today_low = float(lows.iloc[-1]) if len(lows) else last_price
+    today_high = float(highs.iloc[-1]) if len(highs) else last_price
+
+    cond_10_gt_20 = bool(ema10 > ema20)
+    cond_low_gt_20 = bool(today_low > ema20)
+    cond_high_lt_20 = bool(today_high < ema20)
+    cond_low_gt_10 = bool(today_low > ema10)
+
+    if cond_10_gt_20 and cond_low_gt_20:
+        trend = "green"
+    elif cond_10_gt_20 and cond_high_lt_20:
+        trend = "red"
+    else:
+        trend = "yellow"
 
     entry = {
         "ticker": ticker,
@@ -205,9 +239,15 @@ def build_instrument(ticker, name, closes, is_yield=False):
         "price": round(last_price, 4 if is_yield else 2),
         "chg_1d_pct": pct_change(last_price, prev_close),
         "chg_1w_pct": pct_change(last_price, week_ago),
-        "chg_ytd_pct": pct_change(last_price, ytd_start),
+        "chg_1m_pct": pct_change(last_price, month_ago),
+        "chg_3m_pct": pct_change(last_price, three_month_ago),
+        "chg_1y_pct": pct_change(last_price, year_ago),
         "pct_from_52w_high": pct_change(last_price, high_52w),
         "sparkline": sparkline,
+        "trend": trend,
+        "cond_10_gt_20": cond_10_gt_20,
+        "cond_low_gt_20": cond_low_gt_20,
+        "cond_low_gt_10": cond_low_gt_10,
     }
 
     if is_yield and prev_close is not None:
@@ -220,35 +260,41 @@ def build_instrument(ticker, name, closes, is_yield=False):
 
 
 def fetch_all(all_pairs):
-    """Batch-download every ticker in one call, return {ticker: close_series}."""
+    """Batch-download every ticker in one call, return {ticker: {close, high, low}}."""
     tickers = [t for t, _ in all_pairs]
     print(f"Downloading {len(tickers)} tickers...")
+    # 2 years of history: gives enough runway for a real "1 year ago" comparison
+    # and a properly warmed-up 20-day EMA.
     raw = yf.download(
         tickers=tickers,
-        period="1y",
+        period="2y",
         group_by="ticker",
         progress=False,
         threads=True,
         auto_adjust=False,
     )
 
-    closes = {}
+    series = {}
     for t in tickers:
         try:
-            if len(tickers) == 1:
-                closes[t] = raw["Close"]
-            else:
-                closes[t] = raw[t]["Close"]
+            frame = raw if len(tickers) == 1 else raw[t]
+            series[t] = {
+                "close": frame["Close"],
+                "high": frame["High"],
+                "low": frame["Low"],
+            }
         except (KeyError, TypeError):
-            closes[t] = None
-    return closes
+            series[t] = {"close": None, "high": None, "low": None}
+    return series
 
 
-def build_section(pairs, closes_by_ticker):
+def build_section(pairs, series_by_ticker):
     rows = []
     for ticker, name in pairs:
+        s = series_by_ticker.get(ticker, {})
         entry = build_instrument(
-            ticker, name, closes_by_ticker.get(ticker), is_yield=(ticker in YIELD_TICKERS)
+            ticker, name, s.get("close"), s.get("high"), s.get("low"),
+            is_yield=(ticker in YIELD_TICKERS),
         )
         if entry:
             rows.append(entry)
@@ -291,10 +337,10 @@ def main():
             seen.add(pair[0])
             unique_pairs.append(pair)
 
-    closes_by_ticker = fetch_all(unique_pairs)
+    series_by_ticker = fetch_all(unique_pairs)
 
-    macro_data = {key: build_section(pairs, closes_by_ticker) for key, pairs in MACRO.items()}
-    equities_data = {key: build_section(pairs, closes_by_ticker) for key, pairs in EQUITIES.items()}
+    macro_data = {key: build_section(pairs, series_by_ticker) for key, pairs in MACRO.items()}
+    equities_data = {key: build_section(pairs, series_by_ticker) for key, pairs in EQUITIES.items()}
     breadth_data = compute_breadth(equities_data)
 
     # VIX-based sentiment read, if we have it
