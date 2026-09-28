@@ -59,13 +59,15 @@
   .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
   .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
 
-  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
   th, td {
     padding: 9px 12px;
     text-align: right;
     font-size: 12.5px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   th:first-child, td:first-child { text-align: left; }
   td:first-child { color: var(--text); }
@@ -199,7 +201,17 @@ function renderTable(tableId) {
     });
   }
 
-  let html = `<table id="${tableId}"><thead><tr>`;
+  // Fixed column widths (via colgroup) so tables with the same column set
+  // line up with each other regardless of how long any one table's longest
+  // instrument name happens to be -- otherwise each table auto-sizes its
+  // own "Instrument" column independently and the dot/data columns drift
+  // out of alignment from section to section.
+  const COLUMN_WIDTH = { text: 240, price: 90, pct: 80, bps: 90, sparkline: 90, dot: 130, bool: 150 };
+  let html = `<table id="${tableId}"><colgroup>`;
+  columns.forEach(col => {
+    html += `<col style="width:${COLUMN_WIDTH[col.type] || 90}px">`;
+  });
+  html += '</colgroup><thead><tr>';
   columns.forEach(col => {
     const isSorted = state.field === col.field;
     const arrow = isSorted ? `<span class="sort-arrow">${state.direction === 'asc' ? '▲' : '▼'}</span>` : '';
