@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-28T21:03:16.686192+00:00",
+  "last_updated_utc": "2026-09-28T22:07:43.304607+00:00",
   "macro": {
     "global_indices": [
       {
@@ -93,21 +93,22 @@
       {
         "ticker": "^GDAXI",
         "name": "DAX",
-        "price": 25374.42,
-        "chg_1d_pct": -0.13,
-        "chg_1w_pct": -0.78,
-        "chg_1m_pct": -4.5,
-        "chg_3m_pct": 1.33,
-        "chg_1y_pct": 6.86,
-        "pct_from_52w_high": -4.5,
+        "price": 25408.64,
+        "chg_1d_pct": 0.56,
+        "chg_1w_pct": 0.41,
+        "chg_1m_pct": -3.64,
+        "chg_3m_pct": 1.65,
+        "chg_1y_pct": 7.03,
+        "pct_from_52w_high": -4.37,
         "sparkline": [
+          25575.01,
           25578.85,
           25410.63,
           25266.53,
-          25408.64,
-          25374.42
+          25408.64
         ],
         "sparkline_20d": [
+          26258.11,
           25970.11,
           25839.33,
           26003.32,
@@ -126,8 +127,7 @@
           25578.85,
           25410.63,
           25266.53,
-          25408.64,
-          25374.42
+          25408.64
         ],
         "trend": "red",
         "cond_10_gt_20": false,
@@ -225,21 +225,22 @@
       {
         "ticker": "^STOXX50E",
         "name": "Euro Stoxx 50",
-        "price": 6301.28,
-        "chg_1d_pct": -0.02,
-        "chg_1w_pct": -0.27,
-        "chg_1m_pct": -2.84,
-        "chg_3m_pct": 0.3,
-        "chg_1y_pct": 15.31,
-        "pct_from_52w_high": -3.82,
+        "price": 6302.82,
+        "chg_1d_pct": 0.48,
+        "chg_1w_pct": 1.07,
+        "chg_1m_pct": -1.9,
+        "chg_3m_pct": -0.4,
+        "chg_1y_pct": 15.17,
+        "pct_from_52w_high": -3.79,
         "sparkline": [
+          6318.2,
           6324.72,
           6299.82,
           6272.5,
-          6302.82,
-          6301.28
+          6302.82
         ],
         "sparkline_20d": [
+          6420.16,
           6368.98,
           6362.15,
           6382.59,
@@ -258,8 +259,7 @@
           6324.72,
           6299.82,
           6272.5,
-          6302.82,
-          6301.28
+          6302.82
         ],
         "trend": "yellow",
         "cond_10_gt_20": false,
@@ -453,19 +453,19 @@
       {
         "ticker": "CL=F",
         "name": "WTI Crude",
-        "price": 93.45,
-        "chg_1d_pct": 1.13,
-        "chg_1w_pct": -2.43,
-        "chg_1m_pct": 11.88,
-        "chg_3m_pct": 32.08,
-        "chg_1y_pct": 43.81,
-        "pct_from_52w_high": -17.26,
+        "price": 93.29,
+        "chg_1d_pct": 0.95,
+        "chg_1w_pct": -2.6,
+        "chg_1m_pct": 11.68,
+        "chg_3m_pct": 31.86,
+        "chg_1y_pct": 43.57,
+        "pct_from_52w_high": -17.41,
         "sparkline": [
           94.59,
           92.16,
           94.61,
           92.41,
-          93.45
+          93.29
         ],
         "sparkline_20d": [
           85.76,
@@ -487,7 +487,7 @@
           92.16,
           94.61,
           92.41,
-          93.45
+          93.29
         ],
         "trend": "yellow",
         "cond_10_gt_20": true,
@@ -497,19 +497,19 @@
       {
         "ticker": "BZ=F",
         "name": "Brent Crude",
-        "price": 98.69,
-        "chg_1d_pct": -5.4,
-        "chg_1w_pct": -1.64,
-        "chg_1m_pct": 10.02,
-        "chg_3m_pct": 34.91,
-        "chg_1y_pct": 42.16,
-        "pct_from_52w_high": -16.61,
+        "price": 98.56,
+        "chg_1d_pct": -5.52,
+        "chg_1w_pct": -1.77,
+        "chg_1m_pct": 9.88,
+        "chg_3m_pct": 34.74,
+        "chg_1y_pct": 41.98,
+        "pct_from_52w_high": -16.72,
         "sparkline": [
           99.25,
           103.08,
           106.6,
           104.32,
-          98.69
+          98.56
         ],
         "sparkline_20d": [
           90.49,
@@ -531,7 +531,7 @@
           103.08,
           106.6,
           104.32,
-          98.69
+          98.56
         ],
         "trend": "yellow",
         "cond_10_gt_20": true,
@@ -541,19 +541,19 @@
       {
         "ticker": "NG=F",
         "name": "Natural Gas",
-        "price": 3.15,
-        "chg_1d_pct": -1.53,
-        "chg_1w_pct": 10.97,
-        "chg_1m_pct": 8.26,
-        "chg_3m_pct": -1.07,
-        "chg_1y_pct": 8.37,
-        "pct_from_52w_high": -57.82,
+        "price": 3.14,
+        "chg_1d_pct": -1.66,
+        "chg_1w_pct": 10.83,
+        "chg_1m_pct": 8.12,
+        "chg_3m_pct": -1.19,
+        "chg_1y_pct": 8.23,
+        "pct_from_52w_high": -57.87,
         "sparkline": [
           2.96,
           3.02,
           3.3,
           3.2,
-          3.15
+          3.14
         ],
         "sparkline_20d": [
           2.93,
@@ -575,7 +575,7 @@
           3.02,
           3.3,
           3.2,
-          3.15
+          3.14
         ],
         "trend": "green",
         "cond_10_gt_20": true,
@@ -636,7 +636,7 @@
         "chg_1w_pct": 0.76,
         "chg_1m_pct": 2.05,
         "chg_3m_pct": 0.09,
-        "chg_1y_pct": 2.69,
+        "chg_1y_pct": 2.68,
         "pct_from_52w_high": -7.97,
         "sparkline": [
           100.6,
@@ -677,19 +677,19 @@
       {
         "ticker": "GC=F",
         "name": "Gold",
-        "price": 4145.5,
-        "chg_1d_pct": -4.07,
-        "chg_1w_pct": -5.44,
-        "chg_1m_pct": -11.12,
-        "chg_3m_pct": 2.64,
-        "chg_1y_pct": 9.93,
-        "pct_from_52w_high": -22.05,
+        "price": 4148.5,
+        "chg_1d_pct": -4.0,
+        "chg_1w_pct": -5.37,
+        "chg_1m_pct": -11.05,
+        "chg_3m_pct": 2.71,
+        "chg_1y_pct": 10.01,
+        "pct_from_52w_high": -22.0,
         "sparkline": [
           4376.4,
           4318.4,
           4298.0,
           4321.2,
-          4145.5
+          4148.5
         ],
         "sparkline_20d": [
           4481.5,
@@ -711,7 +711,7 @@
           4318.4,
           4298.0,
           4321.2,
-          4145.5
+          4148.5
         ],
         "trend": "red",
         "cond_10_gt_20": false,
@@ -721,19 +721,19 @@
       {
         "ticker": "SI=F",
         "name": "Silver",
-        "price": 61.01,
-        "chg_1d_pct": -5.03,
-        "chg_1w_pct": -7.31,
-        "chg_1m_pct": -12.12,
-        "chg_3m_pct": 4.88,
-        "chg_1y_pct": 36.51,
-        "pct_from_52w_high": -46.98,
+        "price": 61.03,
+        "chg_1d_pct": -5.0,
+        "chg_1w_pct": -7.28,
+        "chg_1m_pct": -12.1,
+        "chg_3m_pct": 4.91,
+        "chg_1y_pct": 36.54,
+        "pct_from_52w_high": -46.97,
         "sparkline": [
           65.93,
           64.38,
           63.46,
           64.25,
-          61.01
+          61.03
         ],
         "sparkline_20d": [
           66.22,
@@ -755,7 +755,7 @@
           64.38,
           63.46,
           64.25,
-          61.01
+          61.03
         ],
         "trend": "red",
         "cond_10_gt_20": false,
@@ -765,19 +765,19 @@
       {
         "ticker": "HG=F",
         "name": "Copper",
-        "price": 6.6,
-        "chg_1d_pct": -1.37,
-        "chg_1w_pct": -1.23,
-        "chg_1m_pct": 0.26,
-        "chg_3m_pct": 8.31,
-        "chg_1y_pct": 40.51,
-        "pct_from_52w_high": -2.93,
+        "price": 6.61,
+        "chg_1d_pct": -1.31,
+        "chg_1w_pct": -1.17,
+        "chg_1m_pct": 0.32,
+        "chg_3m_pct": 8.37,
+        "chg_1y_pct": 40.6,
+        "pct_from_52w_high": -2.87,
         "sparkline": [
           6.76,
           6.68,
           6.72,
           6.7,
-          6.6
+          6.61
         ],
         "sparkline_20d": [
           6.59,
@@ -799,7 +799,7 @@
           6.68,
           6.72,
           6.7,
-          6.6
+          6.61
         ],
         "trend": "yellow",
         "cond_10_gt_20": true,
@@ -809,19 +809,19 @@
       {
         "ticker": "PL=F",
         "name": "Platinum",
-        "price": 1734.4,
-        "chg_1d_pct": -2.27,
-        "chg_1w_pct": -3.56,
-        "chg_1m_pct": -6.01,
-        "chg_3m_pct": 10.16,
-        "chg_1y_pct": 13.31,
-        "pct_from_52w_high": -39.2,
+        "price": 1735.7,
+        "chg_1d_pct": -2.2,
+        "chg_1w_pct": -3.49,
+        "chg_1m_pct": -5.94,
+        "chg_3m_pct": 10.24,
+        "chg_1y_pct": 13.39,
+        "pct_from_52w_high": -39.15,
         "sparkline": [
           1822.6,
           1745.7,
           1749.1,
           1774.7,
-          1734.4
+          1735.7
         ],
         "sparkline_20d": [
           1788.4,
@@ -843,7 +843,7 @@
           1745.7,
           1749.1,
           1774.7,
-          1734.4
+          1735.7
         ],
         "trend": "yellow",
         "cond_10_gt_20": false,
@@ -855,19 +855,19 @@
       {
         "ticker": "BTC-USD",
         "name": "Bitcoin",
-        "price": 83602.4,
-        "chg_1d_pct": -1.01,
-        "chg_1w_pct": -0.93,
-        "chg_1m_pct": 5.67,
-        "chg_3m_pct": 31.19,
-        "chg_1y_pct": -9.67,
-        "pct_from_52w_high": -32.99,
+        "price": 83076.02,
+        "chg_1d_pct": -1.64,
+        "chg_1w_pct": -1.55,
+        "chg_1m_pct": 5.01,
+        "chg_3m_pct": 30.37,
+        "chg_1y_pct": -10.24,
+        "pct_from_52w_high": -33.41,
         "sparkline": [
           84379.06,
           84034.92,
           84406.45,
           84458.09,
-          83602.4
+          83076.02
         ],
         "sparkline_20d": [
           78259.52,
@@ -889,7 +889,7 @@
           84034.92,
           84406.45,
           84458.09,
-          83602.4
+          83076.02
         ],
         "trend": "green",
         "cond_10_gt_20": true,
@@ -899,19 +899,19 @@
       {
         "ticker": "ETH-USD",
         "name": "Ethereum",
-        "price": 2687.09,
-        "chg_1d_pct": 0.01,
-        "chg_1w_pct": 0.09,
-        "chg_1m_pct": 7.87,
-        "chg_3m_pct": 42.13,
-        "chg_1y_pct": -15.68,
-        "pct_from_52w_high": -44.38,
+        "price": 2668.17,
+        "chg_1d_pct": -0.7,
+        "chg_1w_pct": -0.62,
+        "chg_1m_pct": 7.11,
+        "chg_3m_pct": 41.13,
+        "chg_1y_pct": -16.27,
+        "pct_from_52w_high": -44.77,
         "sparkline": [
           2687.3,
           2690.48,
           2695.21,
           2686.93,
-          2687.09
+          2668.17
         ],
         "sparkline_20d": [
           2466.91,
@@ -933,7 +933,7 @@
           2690.48,
           2695.21,
           2686.93,
-          2687.09
+          2668.17
         ],
         "trend": "green",
         "cond_10_gt_20": true,
@@ -943,19 +943,19 @@
       {
         "ticker": "SOL-USD",
         "name": "Solana",
-        "price": 119.01,
-        "chg_1d_pct": -2.5,
-        "chg_1w_pct": 3.51,
-        "chg_1m_pct": 14.58,
-        "chg_3m_pct": 60.52,
-        "chg_1y_pct": -10.75,
-        "pct_from_52w_high": -54.55,
+        "price": 117.28,
+        "chg_1d_pct": -3.92,
+        "chg_1w_pct": 2.0,
+        "chg_1m_pct": 12.91,
+        "chg_3m_pct": 58.18,
+        "chg_1y_pct": -12.04,
+        "pct_from_52w_high": -55.21,
         "sparkline": [
           117.01,
           122.01,
           121.43,
           122.06,
-          119.01
+          117.28
         ],
         "sparkline_20d": [
           101.61,
@@ -977,7 +977,7 @@
           122.01,
           121.43,
           122.06,
-          119.01
+          117.28
         ],
         "trend": "green",
         "cond_10_gt_20": true,
