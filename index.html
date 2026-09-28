@@ -113,8 +113,9 @@
 </header>
 
 <div class="view-toggle">
-  <button id="view-btn-performance" class="active" onclick="setView('performance')">Performance</button>
-  <button id="view-btn-traffic" onclick="setView('traffic')">Traffic Light</button>
+  <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
+  <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
+  <button id="filter-btn-green" onclick="toggleGreenFilter()">Uptrends Only</button>
 </div>
 
 <div id="status">Fetching data/market_data.json ...</div>
@@ -125,7 +126,8 @@
 // Global state
 // ---------------------------------------------------------------------
 let DATA = null;
-let currentView = 'performance';
+let currentView = 'traffic';
+let showOnlyGreen = false;
 // per-table sort state, keyed by table id: { field, direction }
 const sortState = {};
 let tableCounter = 0;
@@ -216,7 +218,7 @@ function renderTable(tableId) {
       if (col.field === 'name') {
         html += `<td>${r.name} <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
-        html += `<td class="center-cell">${sparklineSvg(r.sparkline)}</td>`;
+        html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
       } else if (col.type === 'dot') {
         html += `<td class="center-cell">${dot(r[col.field])}</td>`;
       } else if (col.type === 'bool') {
@@ -263,6 +265,20 @@ function makeTable(rows, columns) {
   return `<div style="overflow-x:auto;">${renderTable(tableId)}</div>`;
 }
 
+function filterRows(rows) {
+  return showOnlyGreen ? rows.filter(r => r.trend === 'green') : rows;
+}
+
+function emptyFilterMessage() {
+  return `<p class="section-sub" style="margin-top:16px;">No instruments currently in an uptrend in this section.</p>`;
+}
+
+function toggleGreenFilter() {
+  showOnlyGreen = !showOnlyGreen;
+  document.getElementById('filter-btn-green').classList.toggle('active', showOnlyGreen);
+  renderApp();
+}
+
 // ---------------------------------------------------------------------
 // Column definitions
 // ---------------------------------------------------------------------
@@ -277,6 +293,7 @@ function performanceColumns(yieldMode) {
     { label: '1Y %', field: 'chg_1y_pct', type: 'pct' },
     { label: '52W Hi %', field: 'pct_from_52w_high', type: 'pct' },
     { label: '5D', field: 'sparkline', type: 'sparkline', sortable: false },
+    { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
   ];
 }
 
@@ -292,13 +309,14 @@ const trafficColumns = [
 // Section builders
 // ---------------------------------------------------------------------
 const MACRO_GROUPS = [
-  ['us_index_futures', 'US Index Futures'],
-  ['vol_dollar', 'Volatility & Dollar'],
-  ['crypto', 'Crypto'],
-  ['metals', 'Precious & Base Metals'],
-  ['energy', 'Energy Commodities'],
-  ['yields', 'US Treasury Yields'],
+  // US Index Futures -- disabled for now, may reuse this section later.
+  // ['us_index_futures', 'US Index Futures'],
   ['global_indices', 'Global Market Indices'],
+  ['yields', 'US Treasury Yields'],
+  ['energy', 'Oil and Gas'],
+  ['vol_dollar', 'Volatility & Dollar'],
+  ['metals', 'Precious & Base Metals'],
+  ['crypto', 'Crypto'],
 ];
 const EQUITIES_GROUPS = [
   ['major_etfs', 'Major ETF Stats'],
@@ -306,30 +324,37 @@ const EQUITIES_GROUPS = [
   ['sectors', 'S&P 500 Sectors'],
   ['sectors_ew', 'S&P 500 Equal-Weight Sectors'],
   ['themes', 'Top Thematic ETFs'],
-  ['countries', 'Country ETFs'],
+  ['countries_developed', 'Country ETFs — Developed'],
+  ['countries_emerging', 'Country ETFs — Emerging'],
 ];
 
 function buildPerformanceView(data) {
   let html = `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro Overview</h2></div>
     <p class="section-sub">EOD SNAPSHOT · CLICK ANY COLUMN HEADER TO SORT</p>`;
+  let macroShown = 0;
   MACRO_GROUPS.forEach(([key, label]) => {
-    const rows = (data.macro || {})[key] || [];
+    const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
+    macroShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
     html += makeTable(rows, performanceColumns(key === 'yields'));
   });
+  if (macroShown === 0) html += emptyFilterMessage();
   html += '</div>';
 
   html += `<div class="section">
     <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities Overview</h2></div>
     <p class="section-sub">CLICK ANY COLUMN HEADER TO SORT</p>`;
+  let equitiesShown = 0;
   EQUITIES_GROUPS.forEach(([key, label]) => {
-    const rows = (data.equities || {})[key] || [];
+    const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
+    equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
     html += makeTable(rows, performanceColumns(false));
   });
+  if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
 
   const breadth = data.breadth || {};
@@ -356,23 +381,29 @@ function buildTrafficView(data) {
   let html = `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro — Trend Signals</h2></div>
     <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&gt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW</p>`;
+  let macroShown = 0;
   MACRO_GROUPS.forEach(([key, label]) => {
-    const rows = (data.macro || {})[key] || [];
+    const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
+    macroShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
     html += makeTable(rows, trafficColumns);
   });
+  if (macroShown === 0) html += emptyFilterMessage();
   html += '</div>';
 
   html += `<div class="section">
     <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities — Trend Signals</h2></div>
     <p class="section-sub">CLICK ANY COLUMN HEADER TO SORT</p>`;
+  let equitiesShown = 0;
   EQUITIES_GROUPS.forEach(([key, label]) => {
-    const rows = (data.equities || {})[key] || [];
+    const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
+    equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
     html += makeTable(rows, trafficColumns);
   });
+  if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
 
   return html;

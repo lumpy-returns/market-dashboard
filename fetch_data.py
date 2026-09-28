@@ -4,7 +4,7 @@ Pulls macro + equities data from Yahoo Finance (via yfinance, no API key needed)
 and writes it to data/market_data.json.
 
 Each instrument gets:
-  - price, 1D/1W/1M/3M/1Y % change, % from 52W high, 5-day sparkline
+  - price, 1D/1W/1M/3M/1Y % change, % from 52W high, 5-day and 20-day sparklines
   - EMA-based trend signal (10 EMA vs 20 EMA, low/high vs 20 EMA) for the
     "Traffic Light" view
 
@@ -25,38 +25,13 @@ import yfinance as yf
 # ---------------------------------------------------------------------------
 
 MACRO = {
-    "us_index_futures": [
-        ("ES=F", "S&P 500 Futures"),
-        ("NQ=F", "Nasdaq 100 Futures"),
-        ("YM=F", "Dow Futures"),
-        ("RTY=F", "Russell 2000 Futures"),
-    ],
-    "vol_dollar": [
-        ("^VIX", "VIX"),
-        ("DX-Y.NYB", "US Dollar Index"),
-    ],
-    "crypto": [
-        ("BTC-USD", "Bitcoin"),
-        ("ETH-USD", "Ethereum"),
-        ("SOL-USD", "Solana"),
-    ],
-    "metals": [
-        ("GC=F", "Gold"),
-        ("SI=F", "Silver"),
-        ("HG=F", "Copper"),
-        ("PL=F", "Platinum"),
-    ],
-    "energy": [
-        ("CL=F", "WTI Crude"),
-        ("BZ=F", "Brent Crude"),
-        ("NG=F", "Natural Gas"),
-    ],
-    "yields": [
-        ("^IRX", "13-Week T-Bill"),
-        ("^FVX", "5-Year Treasury"),
-        ("^TNX", "10-Year Treasury"),
-        ("^TYX", "30-Year Treasury"),
-    ],
+    # US index futures -- disabled for now, may reuse this section later.
+    # "us_index_futures": [
+    #     ("ES=F", "S&P 500 Futures"),
+    #     ("NQ=F", "Nasdaq 100 Futures"),
+    #     ("YM=F", "Dow Futures"),
+    #     ("RTY=F", "Russell 2000 Futures"),
+    # ],
     "global_indices": [
         ("^GSPC", "S&P 500"),
         ("^FTSE", "FTSE 100"),
@@ -64,6 +39,32 @@ MACRO = {
         ("^N225", "Nikkei 225"),
         ("^HSI", "Hang Seng"),
         ("^STOXX50E", "Euro Stoxx 50"),
+    ],
+    "yields": [
+        ("^IRX", "13-Week T-Bill"),
+        ("^FVX", "5-Year Treasury"),
+        ("^TNX", "10-Year Treasury"),
+        ("^TYX", "30-Year Treasury"),
+    ],
+    "energy": [
+        ("CL=F", "WTI Crude"),
+        ("BZ=F", "Brent Crude"),
+        ("NG=F", "Natural Gas"),
+    ],
+    "vol_dollar": [
+        ("^VIX", "VIX"),
+        ("DX-Y.NYB", "US Dollar Index"),
+    ],
+    "metals": [
+        ("GC=F", "Gold"),
+        ("SI=F", "Silver"),
+        ("HG=F", "Copper"),
+        ("PL=F", "Platinum"),
+    ],
+    "crypto": [
+        ("BTC-USD", "Bitcoin"),
+        ("ETH-USD", "Ethereum"),
+        ("SOL-USD", "Solana"),
     ],
 }
 
@@ -113,6 +114,7 @@ EQUITIES = {
         ("EWCO", "Communication Services (EW)"),
     ],
     "themes": [
+        # Original set
         ("SMH", "Semiconductors"),
         ("SOXX", "Semiconductor Industry"),
         ("ARKK", "Disruptive Innovation"),
@@ -123,18 +125,124 @@ EQUITIES = {
         ("JETS", "Airlines"),
         ("SKYY", "Cloud Computing"),
         ("ROBO", "Robotics & AI"),
+        # Added -- everything below is new, appended in the order supplied,
+        # skipping tickers that already appear above (SMH, SOXX, IBB, SKYY,
+        # ICLN, FINX).
+        ("GDX", "Gold Miners"),
+        ("DRAM", "Memory Chips"),
+        ("CIBR", "Cybersecurity"),
+        ("BAI", "AI Innovation"),
+        ("IGV", "Software"),
+        ("PAVE", "U.S. Infrastructure Development"),
+        ("ITA", "Aerospace & Defense"),
+        ("GRID", "Smart-Grid Infrastructure"),
+        ("AIQ", "Artificial Intelligence"),
+        ("XBI", "Biotechnology"),
+        ("AIRR", "U.S. Industrial Renaissance"),
+        ("GDXJ", "Junior Gold Miners"),
+        ("PPA", "Aerospace & Defense"),
+        ("COPX", "Copper Miners"),
+        ("SHLD", "Defense Technology"),
+        ("KBWB", "Banks"),
+        ("QTUM", "Quantum Computing"),
+        ("XAR", "Aerospace & Defense"),
+        ("URA", "Uranium & Nuclear"),
+        ("FDN", "Internet Businesses"),
+        ("SIL", "Silver Miners"),
+        ("XME", "Metals & Mining"),
+        ("IFRA", "U.S. Infrastructure"),
+        ("XOP", "Oil & Gas Exploration & Production"),
+        ("NLR", "Uranium & Nuclear"),
+        ("KRE", "Regional Banks"),
+        ("IHI", "Medical Devices"),
+        ("BOTZ", "Robotics & AI"),
+        ("SOXQ", "Semiconductors"),
+        ("XSD", "Semiconductors"),
+        ("FBT", "Biotechnology"),
+        ("PSI", "Semiconductors"),
+        ("ITB", "Home Construction"),
+        ("ARKG", "Genomics"),
+        ("ARKQ", "Autonomous Tech & Robotics"),
+        ("DTCR", "Data Centers & Digital Infrastructure"),
+        ("IYT", "Transportation"),
+        ("BUG", "Cybersecurity"),
+        ("OIH", "Oil Services"),
+        ("URNM", "Uranium Miners"),
+        ("CHAT", "Generative AI"),
+        ("PHO", "Water Resources"),
+        ("FIW", "Water"),
+        ("IHE", "Pharmaceuticals"),
+        ("XHB", "Homebuilders"),
+        ("KBE", "Banks"),
+        ("LIT", "Lithium & Battery Technology"),
+        ("IHF", "Health Care Providers"),
+        ("IAI", "Broker-Dealers & Exchanges"),
+        ("FTXL", "Semiconductors"),
+        ("IHAK", "Cybersecurity"),
+        ("MOO", "Agribusiness"),
+        ("PPH", "Pharmaceuticals"),
+        ("FTXR", "Transportation"),
+        ("TAN", "Solar"),
+        ("ARKF", "Blockchain & Fintech"),
+        ("ARKX", "Space & Defense Innovation"),
+        ("IEO", "Oil & Gas Exploration & Production"),
+        ("MISL", "Aerospace & Defense"),
+        ("IAT", "Regional Banks"),
+        ("PJP", "Pharmaceuticals"),
+        ("XPH", "Pharmaceuticals"),
+        ("KIE", "Insurance"),
+        ("PNQI", "Internet Businesses"),
+        ("KCE", "Capital Markets"),
+        ("XSW", "Software & Services"),
+        ("IAK", "Insurance"),
+        ("PBE", "Biotechnology & Genomics"),
+        ("XRT", "Retail"),
+        ("CLOU", "Cloud Computing"),
+        ("XES", "Oil & Gas Equipment & Services"),
+        ("URNJ", "Junior Uranium Miners"),
+        ("BKCH", "Blockchain Companies"),
+        ("XTN", "Transportation"),
+        ("KBWP", "Property & Casualty Insurance"),
+        ("SMHX", "Fabless Semiconductors"),
+        ("ESPO", "Video Games & Esports"),
+        ("XHS", "Health Care Services"),
+        ("RTH", "Retail"),
+        ("XHE", "Health Care Equipment"),
+        ("GNOM", "Genomics & Biotechnology"),
+        ("HERO", "Video Games & Esports"),
+        ("BETZ", "Sports Betting & Online Gaming"),
     ],
-    "countries": [
+    "countries_developed": [
         ("EWJ", "Japan"),
-        ("MCHI", "China"),
-        ("INDA", "India"),
-        ("EWZ", "Brazil"),
         ("EWG", "Germany"),
         ("EWU", "United Kingdom"),
         ("EWC", "Canada"),
         ("EWA", "Australia"),
+        ("EWS", "Singapore"),
+        ("EWH", "Hong Kong"),
+        ("EWD", "Sweden"),
+        ("ENOR", "Norway"),
+    ],
+    # Classified per MSCI's market classification. South Korea and Taiwan
+    # are Developed under some other providers (e.g. FTSE) but Emerging
+    # under MSCI; Vietnam is technically MSCI Frontier Markets, bucketed
+    # here under Emerging since this dashboard only has two categories.
+    "countries_emerging": [
+        ("MCHI", "China"),
+        ("INDA", "India"),
+        ("EWZ", "Brazil"),
         ("EWY", "South Korea"),
         ("EWT", "Taiwan"),
+        ("EPOL", "Poland"),
+        ("GREK", "Greece"),
+        ("EIDO", "Indonesia"),
+        ("EWM", "Malaysia"),
+        ("KSA", "Saudi Arabia"),
+        ("THD", "Thailand"),
+        ("COLO", "Colombia"),
+        ("EWW", "Mexico"),
+        ("TUR", "Turkey"),
+        ("VNM", "Vietnam"),
     ],
 }
 
@@ -219,6 +327,7 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
     year_ago = offset_price(closes, 252)
     high_52w = float(closes.max())
     sparkline = [round(v, 2) for v in closes.iloc[-5:].tolist()]
+    sparkline_20d = [round(v, 2) for v in closes.iloc[-20:].tolist()]
 
     # --- EMA-based trend signal ---
     ema10 = closes.ewm(span=10, adjust=False).mean().iloc[-1]
@@ -249,6 +358,7 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
         "chg_1y_pct": pct_change(last_price, year_ago),
         "pct_from_52w_high": pct_change(last_price, high_52w),
         "sparkline": sparkline,
+        "sparkline_20d": sparkline_20d,
         "trend": trend,
         "cond_10_gt_20": cond_10_gt_20,
         "cond_low_gt_20": cond_low_gt_20,
