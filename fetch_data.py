@@ -14,6 +14,7 @@ GitHub Actions runs this automatically on a schedule (.github/workflows/refresh.
 
 import json
 import os
+import urllib.parse
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -299,18 +300,21 @@ def offset_price(series, offset):
     return float(series.iloc[0])
 
 
-def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
+def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=False):
     """Compute display stats + trend signal for one ticker."""
     if closes is None or closes.empty:
         return None
 
-    # Align close/high/low on the same dates before computing anything.
+    # Align close/high/low(/open) on the same dates before computing anything.
     # Dropping NaNs from each series independently can desync them if Yahoo
     # has a gap in only one of the three columns (common for less-liquid
     # futures) -- that desync was the cause of "today's high" silently
     # pulling a stale, out-of-date value, which made the Red trend condition
     # fire far too often.
-    combined = pd.DataFrame({"close": closes, "high": highs, "low": lows}).dropna()
+    cols = {"close": closes, "high": highs, "low": lows}
+    if opens is not None:
+        cols["open"] = opens
+    combined = pd.DataFrame(cols).dropna()
     if combined.empty:
         return None
 
@@ -318,6 +322,7 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
     closes = combined["close"] / scale
     highs = combined["high"] / scale
     lows = combined["low"] / scale
+    opens_s = combined["open"] / scale if "open" in combined.columns else None
 
     last_price = float(closes.iloc[-1])
     prev_close = offset_price(closes, 1)
@@ -372,6 +377,28 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
         else:
             weekly_trend = "yellow"
 
+    # --- Daily OHLC + 20 EMA history, for the on-hover candlestick chart ---
+    # EMA is computed over the full close series (already warmed up over 2y)
+    # then trimmed to the displayed window, so the line is accurate from day 1
+    # of the chart rather than restarting cold.
+    history = None
+    if opens_s is not None:
+        dec = 4 if is_yield else 2
+        ema20_full = closes.ewm(span=20, adjust=False).mean()
+        hist_n = min(252, len(combined))  # ~1 trading year
+        hist_dates = combined.index[-hist_n:]
+        history = [
+            {
+                "t": d.strftime("%Y-%m-%d"),
+                "o": round(float(opens_s.loc[d]), dec),
+                "h": round(float(highs.loc[d]), dec),
+                "l": round(float(lows.loc[d]), dec),
+                "c": round(float(closes.loc[d]), dec),
+                "ema20": round(float(ema20_full.loc[d]), dec),
+            }
+            for d in hist_dates
+        ]
+
     entry = {
         "ticker": ticker,
         "name": name,
@@ -396,6 +423,13 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
 
     if ticker in TOP_HOLDINGS:
         entry["top_holdings"] = TOP_HOLDINGS[ticker]
+
+    # Popped off by build_section and written to its own file under
+    # data/history/ rather than shipped inline -- 150+ tickers x ~252 days of
+    # OHLC would otherwise multiply the size of market_data.json many times
+    # over for a chart most visitors will never open.
+    if history is not None:
+        entry["_history"] = history
 
     return entry
 
@@ -423,20 +457,23 @@ def fetch_all(all_pairs):
                 "close": frame["Close"],
                 "high": frame["High"],
                 "low": frame["Low"],
+                "open": frame["Open"],
             }
         except (KeyError, TypeError):
-            series[t] = {"close": None, "high": None, "low": None}
+            series[t] = {"close": None, "high": None, "low": None, "open": None}
     return series
 
 
-def build_section(pairs, series_by_ticker):
+def build_section(pairs, series_by_ticker, histories):
+    """Build display rows for a section, and collect each ticker's daily OHLC
+    history into `histories` (keyed by ticker) as a side effect."""
     rows = []
     for ticker, name in pairs:
         s = series_by_ticker.get(ticker, {})
         try:
             entry = build_instrument(
                 ticker, name, s.get("close"), s.get("high"), s.get("low"),
-                is_yield=(ticker in YIELD_TICKERS),
+                opens=s.get("open"), is_yield=(ticker in YIELD_TICKERS),
             )
         except Exception as exc:
             # One bad ticker should never take down the whole run -- log it
@@ -445,6 +482,9 @@ def build_section(pairs, series_by_ticker):
             print(f"FAIL {ticker:12s} {name}: {exc}")
             entry = None
         if entry:
+            hist = entry.pop("_history", None)
+            if hist:
+                histories[ticker] = hist
             rows.append(entry)
         else:
             print(f"SKIP {ticker:12s} {name} (no data)")
@@ -487,8 +527,9 @@ def main():
 
     series_by_ticker = fetch_all(unique_pairs)
 
-    macro_data = {key: build_section(pairs, series_by_ticker) for key, pairs in MACRO.items()}
-    equities_data = {key: build_section(pairs, series_by_ticker) for key, pairs in EQUITIES.items()}
+    histories = {}
+    macro_data = {key: build_section(pairs, series_by_ticker, histories) for key, pairs in MACRO.items()}
+    equities_data = {key: build_section(pairs, series_by_ticker, histories) for key, pairs in EQUITIES.items()}
     breadth_data = compute_breadth(equities_data)
 
     # VIX-based sentiment read, if we have it
@@ -518,8 +559,25 @@ def main():
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
 
+    # Per-ticker OHLC history, one small file per instrument, fetched lazily
+    # by the frontend only when someone hovers a ticker for the candlestick
+    # chart -- keeps market_data.json itself small for every page load.
+    history_dir = os.path.join(os.path.dirname(__file__), "data", "history")
+    os.makedirs(history_dir, exist_ok=True)
+    current_files = set()
+    for ticker, hist in histories.items():
+        fname = urllib.parse.quote(ticker, safe="") + ".json"
+        current_files.add(fname)
+        with open(os.path.join(history_dir, fname), "w") as f:
+            json.dump(hist, f, separators=(",", ":"))
+    # Remove history files for tickers no longer in our universe.
+    for fname in os.listdir(history_dir):
+        if fname not in current_files:
+            os.remove(os.path.join(history_dir, fname))
+
     total_rows = sum(len(v) for v in macro_data.values()) + sum(len(v) for v in equities_data.values())
     print(f"\nWrote {total_rows} instrument rows to {output_path}")
+    print(f"Wrote {len(histories)} per-ticker history files to {history_dir}")
 
 
 if __name__ == "__main__":

@@ -114,8 +114,28 @@
   .dot-grey { background: var(--dot-grey); }
   th.center-cell, td.center-cell { text-align: center; }
 
-  .ticker-link { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .ticker-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--muted); }
   .ticker-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Hover candlestick chart panel */
+  .chart-panel {
+    position: fixed;
+    z-index: 50;
+    width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+    font-family: Cambria, Garamond, "EB Garamond", Georgia, serif;
+  }
+  .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .chart-panel-title { font-weight: 700; font-size: 12.5px; }
+  .chart-range-toggle button {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: inherit; font-size: 10px; padding: 3px 9px; margin-left: 4px; cursor: pointer;
+  }
+  .chart-range-toggle button.active { color: var(--accent); border-color: var(--accent); }
+  #chart-panel-body { padding: 8px 10px 0 10px; }
+  .chart-panel-legend { padding: 2px 12px 8px 12px; font-size: 10.5px; color: var(--neutral-dot); }
 </style>
 </head>
 <body>
@@ -135,6 +155,18 @@
 
 <div id="status">Fetching data/market_data.json ...</div>
 <div id="app" style="display:none;"></div>
+
+<div id="chart-panel" class="chart-panel" style="display:none;">
+  <div class="chart-panel-head">
+    <span id="chart-panel-title" class="chart-panel-title"></span>
+    <span class="chart-range-toggle">
+      <button id="chart-range-6m" class="active" onclick="setChartRange('6M')">6M</button>
+      <button id="chart-range-1y" onclick="setChartRange('1Y')">1Y</button>
+    </span>
+  </div>
+  <div id="chart-panel-body"></div>
+  <div class="chart-panel-legend">— 20 EMA</div>
+</div>
 
 <script>
 // ---------------------------------------------------------------------
@@ -183,6 +215,9 @@ function sparklineSvg(values) {
 }
 function dot(colorWord) {
   return `<span class="dot dot-${colorWord || 'grey'}"></span>`;
+}
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 function tickerUrl(ticker, linkType) {
   const encoded = encodeURIComponent(ticker);
@@ -252,7 +287,7 @@ function renderTable(tableId) {
     columns.forEach(col => {
       if (col.field === 'name') {
         const url = tickerUrl(r.ticker, linkType);
-        html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer">${r.name}</a> <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
+        html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.name}</a> <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
       } else if (col.type === 'dot') {
@@ -479,6 +514,151 @@ function renderApp() {
 }
 
 // ---------------------------------------------------------------------
+// Hover candlestick chart
+// ---------------------------------------------------------------------
+const HOVER_DELAY_MS = 2000;
+const CLOSE_GRACE_MS = 300;
+const historyCache = {};
+let hoverTimer = null;
+let closeTimer = null;
+let activePanelTicker = null;
+let chartRange = '6M';
+
+async function fetchHistory(ticker) {
+  if (historyCache[ticker]) return historyCache[ticker];
+  const res = await fetch(`data/history/${encodeURIComponent(ticker)}.json?t=${Date.now()}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  historyCache[ticker] = data;
+  return data;
+}
+
+function buildCandleSvg(history, days) {
+  const slice = history.slice(-days);
+  if (slice.length < 2) {
+    return '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Not enough history yet for this instrument.</p>';
+  }
+  const w = 460, h = 210, padL = 46, padR = 8, padT = 10, padB = 18;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const allVals = [];
+  slice.forEach(d => { allVals.push(d.h, d.l); if (d.ema20 != null) allVals.push(d.ema20); });
+  const min = Math.min(...allVals), max = Math.max(...allVals);
+  const range = (max - min) || 1;
+  const n = slice.length;
+  const candleW = Math.max(1.2, (plotW / n) * 0.62);
+  const xFor = i => padL + (i + 0.5) * (plotW / n);
+  const yFor = v => padT + plotH - ((v - min) / range) * plotH;
+
+  let bodies = '';
+  slice.forEach((d, i) => {
+    const x = xFor(i);
+    const up = d.c >= d.o;
+    const color = up ? 'var(--up)' : 'var(--down)';
+    const yH = yFor(d.h), yL = yFor(d.l);
+    bodies += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yH.toFixed(1)}" y2="${yL.toFixed(1)}" stroke="${color}" stroke-width="1"/>`;
+    const yO = yFor(d.o), yC = yFor(d.c);
+    const top = Math.min(yO, yC), bh = Math.max(1, Math.abs(yO - yC));
+    bodies += `<rect x="${(x - candleW / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${candleW.toFixed(1)}" height="${bh.toFixed(1)}" fill="${color}"/>`;
+  });
+
+  let emaPts = '';
+  slice.forEach((d, i) => {
+    if (d.ema20 == null) return;
+    emaPts += `${xFor(i).toFixed(1)},${yFor(d.ema20).toFixed(1)} `;
+  });
+  const emaLine = emaPts ? `<polyline points="${emaPts.trim()}" fill="none" stroke="var(--neutral-dot)" stroke-width="1.5"/>` : '';
+
+  const firstDate = slice[0].t, lastDate = slice[slice.length - 1].t;
+
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <text x="2" y="${(padT + 8).toFixed(1)}" font-size="9" fill="var(--muted)">${max.toFixed(2)}</text>
+    <text x="2" y="${(h - padB).toFixed(1)}" font-size="9" fill="var(--muted)">${min.toFixed(2)}</text>
+    ${bodies}
+    ${emaLine}
+    <text x="${padL}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)">${firstDate}</text>
+    <text x="${(w - padR).toFixed(1)}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)" text-anchor="end">${lastDate}</text>
+  </svg>`;
+}
+
+function positionChartPanel(panel, anchorEl) {
+  const rect = anchorEl.getBoundingClientRect();
+  const panelW = 480, panelH = 280;
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  if (left + panelW > window.innerWidth - 10) left = window.innerWidth - panelW - 10;
+  if (top + panelH > window.innerHeight - 10) top = rect.top - panelH - 6;
+  panel.style.left = `${Math.max(10, left)}px`;
+  panel.style.top = `${Math.max(10, top)}px`;
+}
+
+function renderChartRange() {
+  const panel = document.getElementById('chart-panel');
+  if (!panel._history) return;
+  const days = chartRange === '1Y' ? 252 : 126;
+  document.getElementById('chart-panel-body').innerHTML = buildCandleSvg(panel._history, days);
+}
+
+function setChartRange(range) {
+  chartRange = range;
+  document.getElementById('chart-range-6m').classList.toggle('active', range === '6M');
+  document.getElementById('chart-range-1y').classList.toggle('active', range === '1Y');
+  renderChartRange();
+}
+
+function hideChartPanel() {
+  activePanelTicker = null;
+  document.getElementById('chart-panel').style.display = 'none';
+}
+
+async function openChartPanel(anchorEl, ticker, name) {
+  activePanelTicker = ticker;
+  const panel = document.getElementById('chart-panel');
+  document.getElementById('chart-panel-title').textContent = `${name} (${ticker})`;
+  document.getElementById('chart-panel-body').innerHTML = '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Loading chart…</p>';
+  positionChartPanel(panel, anchorEl);
+  panel.style.display = 'block';
+  try {
+    const history = await fetchHistory(ticker);
+    if (activePanelTicker !== ticker) return; // moved on before this loaded
+    panel._history = history;
+    renderChartRange();
+  } catch (err) {
+    if (activePanelTicker !== ticker) return;
+    document.getElementById('chart-panel-body').innerHTML = '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Chart unavailable for this instrument.</p>';
+  }
+}
+
+function initChartHover() {
+  const panel = document.getElementById('chart-panel');
+
+  document.addEventListener('mouseover', (e) => {
+    const link = e.target.closest && e.target.closest('.ticker-link');
+    if (!link) return;
+    if (hoverTimer) clearTimeout(hoverTimer);
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+    const ticker = link.dataset.ticker;
+    const name = link.dataset.name;
+    hoverTimer = setTimeout(() => openChartPanel(link, ticker, name), HOVER_DELAY_MS);
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const link = e.target.closest && e.target.closest('.ticker-link');
+    if (!link) return;
+    if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+    if (panel.style.display !== 'none') {
+      closeTimer = setTimeout(hideChartPanel, CLOSE_GRACE_MS);
+    }
+  });
+
+  panel.addEventListener('mouseover', () => {
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+  });
+  panel.addEventListener('mouseout', () => {
+    closeTimer = setTimeout(hideChartPanel, CLOSE_GRACE_MS);
+  });
+}
+
+// ---------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------
 async function loadData() {
@@ -513,6 +693,7 @@ async function loadData() {
   }
 }
 
+initChartHover();
 loadData();
 </script>
 
