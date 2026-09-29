@@ -166,7 +166,7 @@
   <div class="toolbar-row">
     <span class="toolbar-label">Filters</span>
     <button id="filter-btn-daily-uptrend" onclick="setFilter('daily_uptrend')">Uptrend on Daily</button>
-    <button id="filter-btn-weekly-uptrend" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
+    <button id="filter-btn-weekly-uptrend" class="active" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
     <button id="filter-btn-pullback-daily" onclick="setFilter('pullback_daily')">Pullback on Daily</button>
   </div>
 </div>
@@ -193,7 +193,7 @@
 let DATA = null;
 let currentView = 'traffic';
 // null | 'daily_uptrend' | 'weekly_uptrend' | 'pullback_daily'
-let activeFilter = null;
+let activeFilter = 'weekly_uptrend';
 // per-table sort state, keyed by table id: { field, direction }
 const sortState = {};
 let tableCounter = 0;
