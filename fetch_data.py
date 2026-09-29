@@ -14,7 +14,7 @@ GitHub Actions runs this automatically on a schedule (.github/workflows/refresh.
 
 import json
 import os
-import urllib.parse
+import re
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -282,6 +282,19 @@ TOP_HOLDINGS = {
     "EWY": ["SAMSUNG", "SK HYNIX", "LG ENERGY"],
     "EWT": ["TSMC", "MEDIATEK", "HON HAI"],
 }
+
+
+def safe_ticker_filename(ticker):
+    """Filesystem- and URL-safe stand-in for a ticker, used to name its
+    history file. Deliberately NOT percent-encoding (e.g. urllib.parse.quote,
+    which turns "^GSPC" into a file literally named "%5EGSPC.json") -- a
+    static file server decodes a requested URL's %5E back to a literal "^"
+    and looks for "^GSPC.json" on disk, which doesn't exist, so every ^ or =
+    ticker (all indices, yields, and futures) 404s. Replacing the unsafe
+    characters outright sidesteps that mismatch entirely; the frontend uses
+    the identical substitution when building the fetch URL.
+    """
+    return re.sub(r"[^A-Za-z0-9.\-]", "_", ticker)
 
 
 def pct_change(new, old):
@@ -599,7 +612,7 @@ def main():
     os.makedirs(history_dir, exist_ok=True)
     current_files = set()
     for ticker, hist in histories.items():
-        fname = urllib.parse.quote(ticker, safe="") + ".json"
+        fname = safe_ticker_filename(ticker) + ".json"
         current_files.add(fname)
         with open(os.path.join(history_dir, fname), "w") as f:
             json.dump(hist, f, separators=(",", ":"))

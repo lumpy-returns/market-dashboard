@@ -635,9 +635,18 @@ let closeTimer = null;
 let activePanelTicker = null;
 let chartRange = '6M';
 
+function safeTickerFilename(ticker) {
+  // Must match fetch_data.py's safe_ticker_filename() exactly: a plain
+  // character substitution, not percent-encoding. A URL-encoded "^GSPC"
+  // (%5EGSPC) gets decoded by the static file server back to a literal
+  // "^GSPC.json" lookup, which doesn't exist -- only the substituted name
+  // does, on both sides.
+  return ticker.replace(/[^A-Za-z0-9.\-]/g, '_');
+}
+
 async function fetchHistory(ticker) {
   if (historyCache[ticker]) return historyCache[ticker];
-  const res = await fetch(`data/history/${encodeURIComponent(ticker)}.json?t=${Date.now()}`);
+  const res = await fetch(`data/history/${safeTickerFilename(ticker)}.json?t=${Date.now()}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   historyCache[ticker] = data;
