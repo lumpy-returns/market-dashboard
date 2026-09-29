@@ -128,7 +128,9 @@
 <div class="view-toggle">
   <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
   <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
-  <button id="filter-btn-green" onclick="toggleGreenFilter()">Uptrends Only</button>
+  <button id="filter-btn-daily-uptrend" onclick="setFilter('daily_uptrend')">Uptrend on Daily</button>
+  <button id="filter-btn-weekly-uptrend" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
+  <button id="filter-btn-pullback-daily" onclick="setFilter('pullback_daily')">Pullback on Daily</button>
 </div>
 
 <div id="status">Fetching data/market_data.json ...</div>
@@ -140,7 +142,8 @@
 // ---------------------------------------------------------------------
 let DATA = null;
 let currentView = 'traffic';
-let showOnlyGreen = false;
+// null | 'daily_uptrend' | 'weekly_uptrend' | 'pullback_daily'
+let activeFilter = null;
 // per-table sort state, keyed by table id: { field, direction }
 const sortState = {};
 let tableCounter = 0;
@@ -299,16 +302,30 @@ function makeTable(rows, columns, linkType) {
 }
 
 function filterRows(rows) {
-  return showOnlyGreen ? rows.filter(r => r.trend === 'green') : rows;
+  if (activeFilter === 'daily_uptrend') return rows.filter(r => r.trend === 'green');
+  if (activeFilter === 'weekly_uptrend') return rows.filter(r => r.weekly_trend === 'green');
+  if (activeFilter === 'pullback_daily') return rows.filter(r => r.trend === 'yellow' && r.weekly_trend === 'green');
+  return rows;
 }
+
+const FILTER_EMPTY_TEXT = {
+  daily_uptrend: 'No instruments currently in an uptrend on Daily Trend in this section.',
+  weekly_uptrend: 'No instruments currently in an uptrend on Weekly Trend in this section.',
+  pullback_daily: 'No instruments currently showing a Daily pullback within a Weekly uptrend in this section.',
+};
 
 function emptyFilterMessage() {
-  return `<p class="section-sub" style="margin-top:16px;">No instruments currently in an uptrend in this section.</p>`;
+  const text = FILTER_EMPTY_TEXT[activeFilter] || 'No instruments match the current filter in this section.';
+  return `<p class="section-sub" style="margin-top:16px;">${text}</p>`;
 }
 
-function toggleGreenFilter() {
-  showOnlyGreen = !showOnlyGreen;
-  document.getElementById('filter-btn-green').classList.toggle('active', showOnlyGreen);
+function setFilter(name) {
+  activeFilter = activeFilter === name ? null : name;
+  ['daily_uptrend', 'weekly_uptrend', 'pullback_daily'].forEach(f => {
+    const id = 'filter-btn-' + f.replace(/_/g, '-');
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', activeFilter === f);
+  });
   renderApp();
 }
 
