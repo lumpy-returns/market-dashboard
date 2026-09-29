@@ -4,25 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Market Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b0e14;
-    --panel: #12161f;
-    --panel-hover: #171c28;
-    --border: #232838;
-    --text: #e6e9f0;
-    --muted: #7a8296;
-    --up: #3ddc84;
-    --down: #ff5c5c;
-    --neutral-dot: #e8b93d;
-    --accent: #5b8cff;
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel-hover: #f2f1ec;
+    --border: #dcd7cc;
+    --text: #1a1a1a;
+    --muted: #6b6660;
+    --up: #1f7a4c;
+    --down: #a4302a;
+    --neutral-dot: #b8860b;
+    --accent: #1d3f6e;
+    --dot-green: #2e8b57;
+    --dot-red: #c0392b;
+    --dot-yellow: #d4a017;
+    --dot-grey: #9a958c;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-family: Cambria, Garamond, "EB Garamond", Georgia, serif;
+    font-variant-numeric: lining-nums tabular-nums;
     padding: 24px;
     max-width: 1200px;
     margin: 0 auto;
@@ -100,11 +108,14 @@
 
   /* Traffic light dots */
   .dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
-  .dot-green { background: var(--up); }
-  .dot-red { background: var(--down); }
-  .dot-yellow { background: var(--neutral-dot); }
-  .dot-grey { background: var(--muted); }
+  .dot-green { background: var(--dot-green); }
+  .dot-red { background: var(--dot-red); }
+  .dot-yellow { background: var(--dot-yellow); }
+  .dot-grey { background: var(--dot-grey); }
   th.center-cell, td.center-cell { text-align: center; }
+
+  .ticker-link { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .ticker-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -170,6 +181,15 @@ function sparklineSvg(values) {
 function dot(colorWord) {
   return `<span class="dot dot-${colorWord}"></span>`;
 }
+function tickerUrl(ticker, linkType) {
+  const encoded = encodeURIComponent(ticker);
+  // ETFs have a "holdings" tab on Yahoo Finance; indices, futures, crypto and
+  // treasury yields are not funds and don't, so they link to the plain quote
+  // page instead.
+  return linkType === 'holdings'
+    ? `https://finance.yahoo.com/quote/${encoded}/holdings/`
+    : `https://finance.yahoo.com/quote/${encoded}/`;
+}
 function boolDot(val, falseColor) {
   return dot(val ? 'green' : (falseColor || 'grey'));
 }
@@ -189,7 +209,7 @@ function compareValues(a, b, type) {
 }
 
 function renderTable(tableId) {
-  const { rows, columns, nameLabel } = tableRegistry[tableId];
+  const { rows, columns, linkType } = tableRegistry[tableId];
   const state = sortState[tableId] || { field: null, direction: 'desc' };
 
   let sortedRows = rows;
@@ -228,7 +248,8 @@ function renderTable(tableId) {
     html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}')"` : ''}>`;
     columns.forEach(col => {
       if (col.field === 'name') {
-        html += `<td>${r.name} <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
+        const url = tickerUrl(r.ticker, linkType);
+        html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer">${r.name}</a> <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
       } else if (col.type === 'dot') {
@@ -271,9 +292,9 @@ function toggleHoldings(rowId) {
   if (row) row.classList.toggle('open');
 }
 
-function makeTable(rows, columns) {
+function makeTable(rows, columns, linkType) {
   const tableId = `tbl-${tableCounter++}`;
-  tableRegistry[tableId] = { rows, columns };
+  tableRegistry[tableId] = { rows, columns, linkType: linkType || 'quote' };
   return `<div style="overflow-x:auto;">${renderTable(tableId)}</div>`;
 }
 
@@ -304,8 +325,6 @@ function performanceColumns(yieldMode) {
     { label: '3M %', field: 'chg_3m_pct', type: 'pct' },
     { label: '1Y %', field: 'chg_1y_pct', type: 'pct' },
     { label: '52W Hi %', field: 'pct_from_52w_high', type: 'pct' },
-    { label: '5D', field: 'sparkline', type: 'sparkline', sortable: false },
-    { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
   ];
 }
 
@@ -315,6 +334,8 @@ const trafficColumns = [
   { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'Low > 20 EMA', field: 'cond_low_gt_20', type: 'bool' },
   { label: 'Low > 10 EMA', field: 'cond_low_gt_10', type: 'bool' },
+  { label: '5D', field: 'sparkline', type: 'sparkline', sortable: false },
+  { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
 ];
 
 // ---------------------------------------------------------------------
@@ -350,7 +371,7 @@ function buildPerformanceView(data) {
     if (rows.length === 0) return;
     macroShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, performanceColumns(key === 'yields'));
+    html += makeTable(rows, performanceColumns(key === 'yields'), 'quote');
   });
   if (macroShown === 0) html += emptyFilterMessage();
   html += '</div>';
@@ -364,7 +385,7 @@ function buildPerformanceView(data) {
     if (rows.length === 0) return;
     equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, performanceColumns(false));
+    html += makeTable(rows, performanceColumns(false), 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
@@ -399,7 +420,7 @@ function buildTrafficView(data) {
     if (rows.length === 0) return;
     macroShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, trafficColumns);
+    html += makeTable(rows, trafficColumns, 'quote');
   });
   if (macroShown === 0) html += emptyFilterMessage();
   html += '</div>';
@@ -413,7 +434,7 @@ function buildTrafficView(data) {
     if (rows.length === 0) return;
     equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, trafficColumns);
+    html += makeTable(rows, trafficColumns, 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
