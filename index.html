@@ -47,8 +47,11 @@
   #last-updated { color: var(--muted); font-size: 12px; }
   #status { color: var(--muted); font-size: 13px; padding: 24px 0; }
 
-  .view-toggle { display: flex; gap: 8px; margin-bottom: 24px; }
-  .view-toggle button {
+  .toolbar { margin-bottom: 24px; }
+  .toolbar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .toolbar-row:last-child { margin-bottom: 0; }
+  .toolbar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); width: 52px; flex-shrink: 0; }
+  .toolbar-row button {
     padding: 10px 20px;
     background: var(--panel);
     border: 1px solid var(--border);
@@ -58,7 +61,15 @@
     letter-spacing: 0.5px;
     cursor: pointer;
   }
-  .view-toggle button.active { color: var(--accent); border-color: var(--accent); }
+  .toolbar-row button.active { color: var(--accent); border-color: var(--accent); }
+
+  .mini-chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 28px 0; }
+  .mini-chart-card { border: 1px solid var(--border); background: var(--panel); padding: 8px 10px; }
+  .mini-chart-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; font-size: 12.5px; }
+  .mini-chart-card-head .ticker-link { font-weight: 700; }
+  .mini-chart-card-name { display: block; color: var(--muted); font-size: 9.5px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-chart-card-body { margin-top: 4px; }
+  .mini-chart-card-body svg { display: block; width: 100%; height: auto; }
 
   .section { margin-top: 40px; }
   .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
@@ -145,12 +156,19 @@
   <div id="last-updated">Loading...</div>
 </header>
 
-<div class="view-toggle">
-  <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
-  <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
-  <button id="filter-btn-daily-uptrend" onclick="setFilter('daily_uptrend')">Uptrend on Daily</button>
-  <button id="filter-btn-weekly-uptrend" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
-  <button id="filter-btn-pullback-daily" onclick="setFilter('pullback_daily')">Pullback on Daily</button>
+<div class="toolbar">
+  <div class="toolbar-row">
+    <span class="toolbar-label">Views</span>
+    <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
+    <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
+    <button id="view-btn-minicharts" onclick="setView('minicharts')">Mini Charts</button>
+  </div>
+  <div class="toolbar-row">
+    <span class="toolbar-label">Filters</span>
+    <button id="filter-btn-daily-uptrend" onclick="setFilter('daily_uptrend')">Uptrend on Daily</button>
+    <button id="filter-btn-weekly-uptrend" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
+    <button id="filter-btn-pullback-daily" onclick="setFilter('pullback_daily')">Pullback on Daily</button>
+  </div>
 </div>
 
 <div id="status">Fetching data/market_data.json ...</div>
@@ -495,10 +513,95 @@ function buildTrafficView(data) {
   return html;
 }
 
+// ---------------------------------------------------------------------
+// Mini Charts view -- a finviz-style grid of small daily candlestick
+// charts (with 20 EMA) built from the same per-ticker history files the
+// hover chart uses, just fetched up front for every visible instrument.
+// ---------------------------------------------------------------------
+let miniChartsRange = '6M';
+
+function miniChartRangeToggle() {
+  return `<span class="chart-range-toggle">
+      <button id="mini-range-6m" class="${miniChartsRange === '6M' ? 'active' : ''}" onclick="setMiniChartsRange('6M')">6M</button>
+      <button id="mini-range-1y" class="${miniChartsRange === '1Y' ? 'active' : ''}" onclick="setMiniChartsRange('1Y')">1Y</button>
+    </span>`;
+}
+
+function buildMiniChartCard(row, linkType) {
+  const trendColor = row.trend || 'grey';
+  const url = tickerUrl(row.ticker, linkType);
+  return `<div class="mini-chart-card" style="border-left:3px solid var(--dot-${trendColor});" data-mini-ticker="${escapeAttr(row.ticker)}">
+    <div class="mini-chart-card-head">
+      <span>
+        <a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(row.ticker)}" data-name="${escapeAttr(row.name)}">${row.ticker}</a>
+        <span class="mini-chart-card-name">${row.name}</span>
+      </span>
+      <span>${fmtPct(row.chg_1d_pct)}</span>
+    </div>
+    <div class="mini-chart-card-body" data-mini-body>
+      <p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">Loading…</p>
+    </div>
+  </div>`;
+}
+
+function buildMiniChartsView(data) {
+  let html = `<div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro — Mini Charts</h2></div>
+    <p class="section-sub">DAILY CANDLES WITH 20 EMA &nbsp; ${miniChartRangeToggle()}</p>`;
+  let macroShown = 0;
+  MACRO_GROUPS.forEach(([key, label]) => {
+    const rows = filterRows((data.macro || {})[key] || []);
+    if (rows.length === 0) return;
+    macroShown++;
+    html += `<div class="subtable-label">▸ ${label}</div><div class="mini-chart-grid">`;
+    rows.forEach(r => { html += buildMiniChartCard(r, 'quote'); });
+    html += '</div>';
+  });
+  if (macroShown === 0) html += emptyFilterMessage();
+  html += '</div>';
+
+  html += `<div class="section">
+    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities — Mini Charts</h2></div>
+    <p class="section-sub">CLICK ANY TICKER TO OPEN ITS QUOTE / HOLDINGS PAGE</p>`;
+  let equitiesShown = 0;
+  EQUITIES_GROUPS.forEach(([key, label]) => {
+    const rows = filterRows((data.equities || {})[key] || []);
+    if (rows.length === 0) return;
+    equitiesShown++;
+    html += `<div class="subtable-label">▸ ${label}</div><div class="mini-chart-grid">`;
+    rows.forEach(r => { html += buildMiniChartCard(r, 'holdings'); });
+    html += '</div>';
+  });
+  if (equitiesShown === 0) html += emptyFilterMessage();
+  html += '</div>';
+
+  return html;
+}
+
+function loadMiniCharts() {
+  const days = miniChartsRange === '1Y' ? 252 : 126;
+  document.querySelectorAll('[data-mini-ticker]').forEach(card => {
+    const ticker = card.dataset.miniTicker;
+    const body = card.querySelector('[data-mini-body]');
+    fetchHistory(ticker).then(history => {
+      if (!body) return;
+      body.innerHTML = buildCandleSvg(history, days, { width: 200, height: 90, showLabels: false });
+    }).catch(() => {
+      if (body) body.innerHTML = '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No chart</p>';
+    });
+  });
+}
+
+function setMiniChartsRange(range) {
+  miniChartsRange = range;
+  renderApp(); // re-render; fetchHistory() is cached so this is instant
+}
+
 function setView(view) {
   currentView = view;
   document.getElementById('view-btn-performance').classList.toggle('active', view === 'performance');
   document.getElementById('view-btn-traffic').classList.toggle('active', view === 'traffic');
+  document.getElementById('view-btn-minicharts').classList.toggle('active', view === 'minicharts');
   renderApp();
 }
 
@@ -510,7 +613,14 @@ function renderApp() {
   tableCounter = 0;
 
   const appEl = document.getElementById('app');
-  appEl.innerHTML = currentView === 'performance' ? buildPerformanceView(DATA) : buildTrafficView(DATA);
+  if (currentView === 'performance') {
+    appEl.innerHTML = buildPerformanceView(DATA);
+  } else if (currentView === 'minicharts') {
+    appEl.innerHTML = buildMiniChartsView(DATA);
+    loadMiniCharts();
+  } else {
+    appEl.innerHTML = buildTrafficView(DATA);
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -533,12 +643,17 @@ async function fetchHistory(ticker) {
   return data;
 }
 
-function buildCandleSvg(history, days) {
+function buildCandleSvg(history, days, opts) {
+  opts = opts || {};
+  const showLabels = opts.showLabels !== false;
   const slice = history.slice(-days);
   if (slice.length < 2) {
-    return '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Not enough history yet for this instrument.</p>';
+    return showLabels
+      ? '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Not enough history yet for this instrument.</p>'
+      : '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No data</p>';
   }
-  const w = 460, h = 210, padL = 46, padR = 8, padT = 10, padB = 18;
+  const w = opts.width || 460, h = opts.height || 210;
+  const padL = showLabels ? 46 : 2, padR = showLabels ? 8 : 2, padT = showLabels ? 10 : 2, padB = showLabels ? 18 : 2;
   const plotW = w - padL - padR, plotH = h - padT - padB;
   const allVals = [];
   slice.forEach(d => { allVals.push(d.h, d.l); if (d.ema20 != null) allVals.push(d.ema20); });
@@ -566,17 +681,22 @@ function buildCandleSvg(history, days) {
     if (d.ema20 == null) return;
     emaPts += `${xFor(i).toFixed(1)},${yFor(d.ema20).toFixed(1)} `;
   });
-  const emaLine = emaPts ? `<polyline points="${emaPts.trim()}" fill="none" stroke="var(--neutral-dot)" stroke-width="1.5"/>` : '';
+  const emaLine = emaPts ? `<polyline points="${emaPts.trim()}" fill="none" stroke="var(--neutral-dot)" stroke-width="${showLabels ? 1.5 : 1.2}"/>` : '';
 
-  const firstDate = slice[0].t, lastDate = slice[slice.length - 1].t;
-
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  let labels = '';
+  if (showLabels) {
+    const firstDate = slice[0].t, lastDate = slice[slice.length - 1].t;
+    labels = `
     <text x="2" y="${(padT + 8).toFixed(1)}" font-size="9" fill="var(--muted)">${max.toFixed(2)}</text>
     <text x="2" y="${(h - padB).toFixed(1)}" font-size="9" fill="var(--muted)">${min.toFixed(2)}</text>
+    <text x="${padL}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)">${firstDate}</text>
+    <text x="${(w - padR).toFixed(1)}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)" text-anchor="end">${lastDate}</text>`;
+  }
+
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
     ${bodies}
     ${emaLine}
-    <text x="${padL}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)">${firstDate}</text>
-    <text x="${(w - padR).toFixed(1)}" y="${(h - 4).toFixed(1)}" font-size="9" fill="var(--muted)" text-anchor="end">${lastDate}</text>
+    ${labels}
   </svg>`;
 }
 
