@@ -63,7 +63,7 @@
   }
   .toolbar-row button.active { color: var(--accent); border-color: var(--accent); }
 
-  .mini-chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 28px 0; }
+  .mini-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 28px 0; }
   .mini-chart-card { border: 1px solid var(--border); background: var(--panel); padding: 8px 10px; }
   .mini-chart-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; font-size: 12.5px; }
   .mini-chart-card-head .ticker-link { font-weight: 700; }
@@ -585,7 +585,7 @@ function loadMiniCharts() {
     const body = card.querySelector('[data-mini-body]');
     fetchHistory(ticker).then(history => {
       if (!body) return;
-      body.innerHTML = buildCandleSvg(history, days, { width: 200, height: 90, showLabels: false });
+      body.innerHTML = buildCandleSvg(history, days, { width: 360, height: 160, showLabels: false });
     }).catch(() => {
       if (body) body.innerHTML = '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No chart</p>';
     });
