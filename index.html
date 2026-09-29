@@ -179,11 +179,11 @@
     <span id="chart-panel-title" class="chart-panel-title"></span>
     <span class="chart-range-toggle">
       <button id="chart-range-6m" class="active" onclick="setChartRange('6M')">6M</button>
-      <button id="chart-range-1y" onclick="setChartRange('1Y')">1Y</button>
+      <button id="chart-range-1y" onclick="setChartRange('1Y')">12M</button>
     </span>
   </div>
   <div id="chart-panel-body"></div>
-  <div class="chart-panel-legend">— 20 EMA</div>
+  <div id="chart-panel-legend" class="chart-panel-legend">— 20 EMA · daily bars</div>
 </div>
 
 <script>
@@ -523,7 +523,7 @@ let miniChartsRange = '6M';
 function miniChartRangeToggle() {
   return `<span class="chart-range-toggle">
       <button id="mini-range-6m" class="${miniChartsRange === '6M' ? 'active' : ''}" onclick="setMiniChartsRange('6M')">6M</button>
-      <button id="mini-range-1y" class="${miniChartsRange === '1Y' ? 'active' : ''}" onclick="setMiniChartsRange('1Y')">1Y</button>
+      <button id="mini-range-1y" class="${miniChartsRange === '1Y' ? 'active' : ''}" onclick="setMiniChartsRange('1Y')">12M</button>
     </span>`;
 }
 
@@ -545,9 +545,10 @@ function buildMiniChartCard(row, linkType) {
 }
 
 function buildMiniChartsView(data) {
+  const timeframeLabel = miniChartsRange === '1Y' ? 'WEEKLY' : 'DAILY';
   let html = `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro — Mini Charts</h2></div>
-    <p class="section-sub">DAILY CANDLES WITH 20 EMA &nbsp; ${miniChartRangeToggle()}</p>`;
+    <p class="section-sub">${timeframeLabel} CANDLES WITH 20 EMA &nbsp; ${miniChartRangeToggle()}</p>`;
   let macroShown = 0;
   MACRO_GROUPS.forEach(([key, label]) => {
     const rows = filterRows((data.macro || {})[key] || []);
@@ -579,13 +580,13 @@ function buildMiniChartsView(data) {
 }
 
 function loadMiniCharts() {
-  const days = miniChartsRange === '1Y' ? 252 : 126;
   document.querySelectorAll('[data-mini-ticker]').forEach(card => {
     const ticker = card.dataset.miniTicker;
     const body = card.querySelector('[data-mini-body]');
     fetchHistory(ticker).then(history => {
       if (!body) return;
-      body.innerHTML = buildCandleSvg(history, days, { width: 360, height: 160, showLabels: false });
+      const bars = selectChartBars(history, miniChartsRange);
+      body.innerHTML = buildCandleSvg(bars, { width: 360, height: 160, showLabels: false });
     }).catch(() => {
       if (body) body.innerHTML = '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No chart</p>';
     });
@@ -643,11 +644,19 @@ async function fetchHistory(ticker) {
   return data;
 }
 
-function buildCandleSvg(history, days, opts) {
+function selectChartBars(history, range) {
+  // 6M -> daily bars (~126 trading days); 12M -> weekly bars (~52 weeks).
+  // Switching to weekly at the 12M mark keeps a year-long chart readable
+  // instead of cramming 252 daily candles into the same width.
+  if (!history) return [];
+  if (range === '1Y') return (history.weekly || []).slice(-52);
+  return (history.daily || []).slice(-126);
+}
+
+function buildCandleSvg(slice, opts) {
   opts = opts || {};
   const showLabels = opts.showLabels !== false;
-  const slice = history.slice(-days);
-  if (slice.length < 2) {
+  if (!slice || slice.length < 2) {
     return showLabels
       ? '<p class="neutral" style="padding:6px 0 12px 0;font-size:11px;">Not enough history yet for this instrument.</p>'
       : '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No data</p>';
@@ -714,8 +723,10 @@ function positionChartPanel(panel, anchorEl) {
 function renderChartRange() {
   const panel = document.getElementById('chart-panel');
   if (!panel._history) return;
-  const days = chartRange === '1Y' ? 252 : 126;
-  document.getElementById('chart-panel-body').innerHTML = buildCandleSvg(panel._history, days);
+  const bars = selectChartBars(panel._history, chartRange);
+  document.getElementById('chart-panel-body').innerHTML = buildCandleSvg(bars);
+  const legend = document.getElementById('chart-panel-legend');
+  if (legend) legend.textContent = chartRange === '1Y' ? '— 20 EMA · weekly bars' : '— 20 EMA · daily bars';
 }
 
 function setChartRange(range) {

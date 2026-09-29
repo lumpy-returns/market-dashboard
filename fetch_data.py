@@ -352,15 +352,15 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     else:
         trend = "yellow"
 
-    # --- Weekly trend signal ---
+    # --- Weekly trend signal (+ weekly OHLC history for the 12M chart view) ---
     # Same EMA10-vs-EMA20 logic, just resampled to weekly bars first. Reuses
-    # the daily close/high/low we already have -- no extra Yahoo calls needed.
-    weekly = (
-        pd.DataFrame({"close": closes, "high": highs, "low": lows})
-        .resample("W-FRI")
-        .agg({"close": "last", "high": "max", "low": "min"})
-        .dropna()
-    )
+    # the daily close/high/low(/open) we already have -- no extra Yahoo calls needed.
+    weekly_cols = {"close": closes, "high": highs, "low": lows}
+    weekly_agg = {"close": "last", "high": "max", "low": "min"}
+    if opens_s is not None:
+        weekly_cols["open"] = opens_s
+        weekly_agg["open"] = "first"
+    weekly = pd.DataFrame(weekly_cols).resample("W-FRI").agg(weekly_agg).dropna()
     weekly_trend = None
     if len(weekly) >= 21:  # need a warmed-up 20-week EMA
         w_ema10 = weekly["close"].ewm(span=10, adjust=False).mean().iloc[-1]
@@ -399,6 +399,25 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
             for d in hist_dates
         ]
 
+    # --- Weekly OHLC + 20 EMA history, for the 12M (weekly-bar) chart view ---
+    weekly_history = None
+    if opens_s is not None and len(weekly) >= 2:
+        dec = 4 if is_yield else 2
+        w_ema20_full = weekly["close"].ewm(span=20, adjust=False).mean()
+        w_hist_n = min(104, len(weekly))  # ~2 years of weekly bars
+        w_hist_dates = weekly.index[-w_hist_n:]
+        weekly_history = [
+            {
+                "t": d.strftime("%Y-%m-%d"),
+                "o": round(float(weekly["open"].loc[d]), dec),
+                "h": round(float(weekly["high"].loc[d]), dec),
+                "l": round(float(weekly["low"].loc[d]), dec),
+                "c": round(float(weekly["close"].loc[d]), dec),
+                "ema20": round(float(w_ema20_full.loc[d]), dec),
+            }
+            for d in w_hist_dates
+        ]
+
     entry = {
         "ticker": ticker,
         "name": name,
@@ -428,8 +447,8 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     # data/history/ rather than shipped inline -- 150+ tickers x ~252 days of
     # OHLC would otherwise multiply the size of market_data.json many times
     # over for a chart most visitors will never open.
-    if history is not None:
-        entry["_history"] = history
+    if history is not None or weekly_history is not None:
+        entry["_history"] = {"daily": history, "weekly": weekly_history}
 
     return entry
 
