@@ -521,6 +521,7 @@ let miniChartsRange = '6M';
 
 function miniChartRangeToggle() {
   return `<span class="chart-range-toggle">
+      <button id="mini-range-3m" class="${miniChartsRange === '3M' ? 'active' : ''}" onclick="setMiniChartsRange('3M')">3M</button>
       <button id="mini-range-6m" class="${miniChartsRange === '6M' ? 'active' : ''}" onclick="setMiniChartsRange('6M')">6M</button>
       <button id="mini-range-1y" class="${miniChartsRange === '1Y' ? 'active' : ''}" onclick="setMiniChartsRange('1Y')">12M</button>
     </span>`;
@@ -585,7 +586,7 @@ function loadMiniCharts() {
     fetchHistory(ticker).then(history => {
       if (!body) return;
       const bars = selectChartBars(history, miniChartsRange);
-      body.innerHTML = buildCandleSvg(bars, { width: 360, height: 160, showLabels: false });
+      body.innerHTML = buildCandleSvg(bars, { width: 360, height: 200, showLabels: false });
     }).catch(() => {
       if (body) body.innerHTML = '<p class="neutral" style="font-size:10px;padding:24px 0;text-align:center;margin:0;">No chart</p>';
     });
@@ -644,11 +645,12 @@ async function fetchHistory(ticker) {
 }
 
 function selectChartBars(history, range) {
-  // 6M -> daily bars (~126 trading days); 12M -> weekly bars (~52 weeks).
-  // Switching to weekly at the 12M mark keeps a year-long chart readable
-  // instead of cramming 252 daily candles into the same width.
+  // 3M/6M -> daily bars (~63/~126 trading days); 12M -> weekly bars (~52
+  // weeks). Switching to weekly at the 12M mark keeps a year-long chart
+  // readable instead of cramming 252 daily candles into the same width.
   if (!history) return [];
   if (range === '1Y') return (history.weekly || []).slice(-52);
+  if (range === '3M') return (history.daily || []).slice(-63);
   return (history.daily || []).slice(-126);
 }
 
