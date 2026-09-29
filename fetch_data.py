@@ -347,6 +347,31 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
     else:
         trend = "yellow"
 
+    # --- Weekly trend signal ---
+    # Same EMA10-vs-EMA20 logic, just resampled to weekly bars first. Reuses
+    # the daily close/high/low we already have -- no extra Yahoo calls needed.
+    weekly = (
+        pd.DataFrame({"close": closes, "high": highs, "low": lows})
+        .resample("W-FRI")
+        .agg({"close": "last", "high": "max", "low": "min"})
+        .dropna()
+    )
+    weekly_trend = None
+    if len(weekly) >= 21:  # need a warmed-up 20-week EMA
+        w_ema10 = weekly["close"].ewm(span=10, adjust=False).mean().iloc[-1]
+        w_ema20 = weekly["close"].ewm(span=20, adjust=False).mean().iloc[-1]
+        w_low = float(weekly["low"].iloc[-1])
+        w_high = float(weekly["high"].iloc[-1])
+        w_cond_10_gt_20 = bool(w_ema10 > w_ema20)
+        w_cond_low_gt_20 = bool(w_low > w_ema20)
+        w_cond_high_lt_20 = bool(w_high < w_ema20)
+        if w_cond_10_gt_20 and w_cond_low_gt_20:
+            weekly_trend = "green"
+        elif (not w_cond_10_gt_20) and w_cond_high_lt_20:
+            weekly_trend = "red"
+        else:
+            weekly_trend = "yellow"
+
     entry = {
         "ticker": ticker,
         "name": name,
@@ -360,6 +385,7 @@ def build_instrument(ticker, name, closes, highs, lows, is_yield=False):
         "sparkline": sparkline,
         "sparkline_20d": sparkline_20d,
         "trend": trend,
+        "weekly_trend": weekly_trend,
         "cond_10_gt_20": cond_10_gt_20,
         "cond_low_gt_20": cond_low_gt_20,
         "cond_low_gt_10": cond_low_gt_10,

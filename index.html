@@ -63,7 +63,7 @@
   .section { margin-top: 40px; }
   .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
   .section-num { color: var(--accent); font-size: 13px; font-weight: bold; }
-  .section-title { font-size: 16px; margin: 0; }
+  .section-title { font-size: 24px; font-weight: 700; margin: 0; }
   .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
   .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
 
@@ -82,11 +82,11 @@
   tr.has-holdings td:first-child { cursor: pointer; }
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
-    color: var(--muted);
+    color: var(--text);
     font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-weight: normal;
+    font-weight: 700;
     cursor: pointer;
     user-select: none;
   }
@@ -152,7 +152,7 @@ function fmtPct(val) {
   if (val === null || val === undefined) return '<span class="neutral">—</span>';
   const cls = val > 0 ? 'up' : (val < 0 ? 'down' : 'neutral');
   const sign = val > 0 ? '+' : '';
-  return `<span class="${cls}">${sign}${val.toFixed(2)}%</span>`;
+  return `<span class="${cls}">${sign}${val.toFixed(1)} %</span>`;
 }
 function fmtBps(val) {
   if (val === null || val === undefined) return '<span class="neutral">—</span>';
@@ -179,7 +179,7 @@ function sparklineSvg(values) {
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
 }
 function dot(colorWord) {
-  return `<span class="dot dot-${colorWord}"></span>`;
+  return `<span class="dot dot-${colorWord || 'grey'}"></span>`;
 }
 function tickerUrl(ticker, linkType) {
   const encoded = encodeURIComponent(ticker);
@@ -330,7 +330,8 @@ function performanceColumns(yieldMode) {
 
 const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
-  { label: 'Trend', field: 'trend', type: 'dot' },
+  { label: 'Daily Trend', field: 'trend', type: 'dot' },
+  { label: 'Weekly Trend', field: 'weekly_trend', type: 'dot' },
   { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'Low > 20 EMA', field: 'cond_low_gt_20', type: 'bool' },
   { label: 'Low > 10 EMA', field: 'cond_low_gt_10', type: 'bool' },
@@ -392,8 +393,8 @@ function buildPerformanceView(data) {
 
   const breadth = data.breadth || {};
   const cards = [
-    ['1D Breadth (% Positive)', breadth.pct_positive_1d != null ? breadth.pct_positive_1d.toFixed(1) + '%' : '—'],
-    ['1W Breadth (% Positive)', breadth.pct_positive_1w != null ? breadth.pct_positive_1w.toFixed(1) + '%' : '—'],
+    ['1D Breadth (% Positive)', breadth.pct_positive_1d != null ? breadth.pct_positive_1d.toFixed(1) + ' %' : '—'],
+    ['1W Breadth (% Positive)', breadth.pct_positive_1w != null ? breadth.pct_positive_1w.toFixed(1) + ' %' : '—'],
     ['VIX Level', breadth.vix_level != null ? breadth.vix_level.toFixed(2) : '—'],
     ['Sentiment', breadth.sentiment_label || '—'],
     ['Tracked Instruments', breadth.tracked_instruments ?? '—'],
