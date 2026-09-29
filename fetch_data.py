@@ -344,6 +344,19 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     cond_low_gt_20 = bool(today_low > ema20)
     cond_high_lt_20 = bool(today_high < ema20)
     cond_low_gt_10 = bool(today_low > ema10)
+    cond_high_lt_10 = bool(today_high < ema10)
+
+    # Dot state for the "High/Low vs 10 EMA" column: green when today's low
+    # is above the 10 EMA (bullish), red when the 10/20 EMAs are bearishly
+    # aligned AND today's high is below the 10 EMA, grey otherwise. Low>10EMA
+    # and High<10EMA can't both be true (that would need low > high), so
+    # green/red are mutually exclusive.
+    if cond_low_gt_10:
+        state_vs_10ema = "green"
+    elif (not cond_10_gt_20) and cond_high_lt_10:
+        state_vs_10ema = "red"
+    else:
+        state_vs_10ema = "grey"
 
     if cond_10_gt_20 and cond_low_gt_20:
         trend = "green"
@@ -435,6 +448,7 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
         "cond_10_gt_20": cond_10_gt_20,
         "cond_low_gt_20": cond_low_gt_20,
         "cond_low_gt_10": cond_low_gt_10,
+        "state_vs_10ema": state_vs_10ema,
     }
 
     if is_yield and prev_close is not None:
