@@ -1,4 +1,10 @@
 {
-  "checked_utc": "2026-09-30T15:51:46.172317+00:00",
-  "failed": []
+  "checked_utc": "2026-09-30T22:07:42.395196+00:00",
+  "failed": [
+    {
+      "ticker": "XLP",
+      "name": "Consumer Staples",
+      "section": "equities.sectors"
+    }
+  ]
 }
