@@ -496,17 +496,47 @@ def fetch_all(all_pairs):
     )
 
     series = {}
+    missing = []
     for t in tickers:
         try:
             frame = raw if len(tickers) == 1 else raw[t]
+            if frame["Close"].dropna().empty:
+                raise ValueError("empty frame")
             series[t] = {
                 "close": frame["Close"],
                 "high": frame["High"],
                 "low": frame["Low"],
                 "open": frame["Open"],
             }
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, ValueError):
+            missing.append(t)
             series[t] = {"close": None, "high": None, "low": None, "open": None}
+
+    # The big threaded batch call occasionally drops a handful of otherwise-
+    # valid tickers outright (a transient empty response on that ticker's
+    # thread, Yahoo rate-limiting, etc.) -- observed happening to the exact
+    # same tickers across separate runs, e.g. every "sectors_ew" ETF except
+    # RCD. A lone, unthreaded retry per missing ticker uses a simpler
+    # request path and reliably recovers them without touching the ones
+    # that already succeeded.
+    if missing:
+        print(f"Batch download dropped {len(missing)} ticker(s), retrying individually: {', '.join(missing)}")
+        for t in missing:
+            try:
+                frame = yf.download(t, period="2y", progress=False, threads=False, auto_adjust=False)
+                if frame.empty or frame["Close"].dropna().empty:
+                    print(f"  still empty: {t}")
+                    continue
+                series[t] = {
+                    "close": frame["Close"],
+                    "high": frame["High"],
+                    "low": frame["Low"],
+                    "open": frame["Open"],
+                }
+                print(f"  recovered on retry: {t}")
+            except Exception as exc:
+                print(f"  retry failed: {t}: {exc}")
+
     return series
 
 
