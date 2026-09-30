@@ -256,8 +256,15 @@ function boolDot(val, falseColor) {
 // columns: [{ label, field, type: 'text'|'num'|'bool'|'sparkline'|'dot', sortable }]
 const tableRegistry = {}; // tableId -> { rows, columns, nameLabel }
 
+// Sort rank for trend dots -- lets clicking a dot column's header sort by
+// how bullish/bearish it is instead of alphabetically (which would put
+// "green" and "grey" next to each other and "red" last for the wrong
+// reason). Unranked/unknown colors sort after red.
+const DOT_RANK = { green: 1, yellow: 2, red: 3 };
+
 function compareValues(a, b, type) {
   if (type === 'bool') { a = a ? 1 : 0; b = b ? 1 : 0; }
+  if (type === 'dot') { a = DOT_RANK[a] || 4; b = DOT_RANK[b] || 4; }
   if (a === null || a === undefined) return 1;
   if (b === null || b === undefined) return -1;
   if (typeof a === 'string') return a.localeCompare(b);
