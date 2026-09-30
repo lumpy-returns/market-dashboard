@@ -101,18 +101,23 @@ EQUITIES = {
         ("XLU", "Utilities"),
         ("XLC", "Communication Services"),
     ],
+    # Invesco renamed this entire ETF suite (old Rydex-legacy tickers -> the
+    # RSP-prefixed scheme, to visually match the flagship RSP fund) effective
+    # June 2024. The old tickers (RYT, RYF, RYH, RCD, RHS, RYE, RGI, RTM,
+    # EWRE, RYU, EWCO) are being phased out on Yahoo Finance -- most already
+    # return no data at all, and the rest will eventually follow.
     "sectors_ew": [
-        ("RYT", "Technology (EW)"),
-        ("RYF", "Financials (EW)"),
-        ("RYH", "Health Care (EW)"),
-        ("RCD", "Consumer Discretionary (EW)"),
-        ("RHS", "Consumer Staples (EW)"),
-        ("RYE", "Energy (EW)"),
-        ("RGI", "Industrials (EW)"),
-        ("RTM", "Materials (EW)"),
-        ("EWRE", "Real Estate (EW)"),
-        ("RYU", "Utilities (EW)"),
-        ("EWCO", "Communication Services (EW)"),
+        ("RSPT", "Technology (EW)"),
+        ("RSPF", "Financials (EW)"),
+        ("RSPH", "Health Care (EW)"),
+        ("RSPD", "Consumer Discretionary (EW)"),
+        ("RSPS", "Consumer Staples (EW)"),
+        ("RSPG", "Energy (EW)"),
+        ("RSPN", "Industrials (EW)"),
+        ("RSPM", "Materials (EW)"),
+        ("RSPR", "Real Estate (EW)"),
+        ("RSPU", "Utilities (EW)"),
+        ("RSPC", "Communication Services (EW)"),
     ],
     "themes": [
         # Original set
