@@ -1,0 +1,104 @@
+{
+  "updated_utc": "2026-09-30T16:00:00+00:00",
+  "changes": [
+    {
+      "old_ticker": "RYT",
+      "new_ticker": "RSPT",
+      "name": "Technology (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RYF",
+      "new_ticker": "RSPF",
+      "name": "Financials (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RYH",
+      "new_ticker": "RSPH",
+      "name": "Health Care (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RCD",
+      "new_ticker": "RSPD",
+      "name": "Consumer Discretionary (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker was the last of the group still resolving on Yahoo Finance."
+    },
+    {
+      "old_ticker": "RHS",
+      "new_ticker": "RSPS",
+      "name": "Consumer Staples (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RYE",
+      "new_ticker": "RSPG",
+      "name": "Energy (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RGI",
+      "new_ticker": "RSPN",
+      "name": "Industrials (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RTM",
+      "new_ticker": "RSPM",
+      "name": "Materials (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "EWRE",
+      "new_ticker": "RSPR",
+      "name": "Real Estate (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "RYU",
+      "new_ticker": "RSPU",
+      "name": "Utilities (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    },
+    {
+      "old_ticker": "EWCO",
+      "new_ticker": "RSPC",
+      "name": "Communication Services (EW)",
+      "section": "equities.sectors_ew",
+      "status": "Renamed",
+      "date": "2026-09-30",
+      "note": "Invesco renamed its equal-weight sector ETF suite (June 2024); old ticker stopped returning data."
+    }
+  ]
+}

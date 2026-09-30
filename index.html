@@ -174,6 +174,16 @@
 <div id="status">Fetching data/market_data.json ...</div>
 <div id="app" style="display:none;"></div>
 
+<div id="market-changes" class="section" style="margin-top:56px;">
+  <div class="section-head"><h2 class="section-title">Market Changes</h2></div>
+  <p class="section-sub">SCANNED MONTHLY &middot; THEMATIC ETF LISTINGS / DELISTINGS, LAST 6 MONTHS</p>
+  <div id="thematic-etf-table"><p class="section-sub" style="margin-top:8px;">Loading…</p></div>
+
+  <div class="subtable-label" style="margin-top:28px;">▸ Dashboard Ticker Changes</div>
+  <p class="section-sub">TICKERS TRACKED ON THIS DASHBOARD THAT WERE RENAMED OR DELISTED</p>
+  <div id="ticker-changes-table"><p class="section-sub" style="margin-top:8px;">Loading…</p></div>
+</div>
+
 <div id="chart-panel" class="chart-panel" style="display:none;">
   <div class="chart-panel-head">
     <span id="chart-panel-title" class="chart-panel-title"></span>
@@ -807,6 +817,94 @@ function initChartHover() {
 }
 
 // ---------------------------------------------------------------------
+// Market Changes -- thematic ETF listings/delistings and this dashboard's
+// own ticker rename/delisting log. Plain tables, no charts or price data,
+// always shown once below the toggled view (not per-view/filter state).
+// ---------------------------------------------------------------------
+function fmtEventDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function buildSimpleTable(columns, rows) {
+  if (!rows.length) {
+    return '<p class="section-sub" style="margin-top:8px;">No entries in the last 6 months.</p>';
+  }
+  let html = '<div style="overflow-x:auto;"><table><thead><tr>';
+  columns.forEach(col => { html += `<th>${col.label}</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    columns.forEach(col => {
+      const val = col.render ? col.render(row) : (row[col.field] ?? '—');
+      html += `<td>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+async function loadThematicEtfEvents() {
+  const container = document.getElementById('thematic-etf-table');
+  if (!container) return;
+  try {
+    const res = await fetch(`data/thematic_etf_events.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const windowMonths = data.window_months || 6;
+    const cutoff = new Date();
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - windowMonths);
+    const events = (data.events || [])
+      .filter(e => e.date && new Date(`${e.date}T00:00:00Z`) >= cutoff)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    container.innerHTML = buildSimpleTable(
+      [
+        { label: 'Ticker', field: 'ticker' },
+        { label: 'Theme', field: 'theme' },
+        { label: 'Event', render: r => r.event === 'Listed' ? '<span class="up">Listed</span>' : '<span class="down">Delisted</span>' },
+        { label: 'Date', render: r => fmtEventDate(r.date) },
+      ],
+      events
+    );
+  } catch (err) {
+    container.innerHTML = '<p class="section-sub" style="margin-top:8px;">Could not load thematic ETF data.</p>';
+  }
+}
+
+async function loadTickerChanges() {
+  const container = document.getElementById('ticker-changes-table');
+  if (!container) return;
+  try {
+    const res = await fetch(`data/delisted_instruments.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const changes = [...(data.changes || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    container.innerHTML = buildSimpleTable(
+      [
+        { label: 'Old Ticker', field: 'old_ticker' },
+        { label: 'Name', field: 'name' },
+        { label: 'Section', render: r => (r.section || '').replace(/^[a-z]+\./, '') },
+        { label: 'Status', render: r => r.status === 'Renamed'
+            ? `<span class="up">Renamed → ${r.new_ticker}</span>`
+            : '<span class="down">Delisted</span>' },
+        { label: 'Date', render: r => fmtEventDate(r.date) },
+      ],
+      changes
+    );
+  } catch (err) {
+    container.innerHTML = '<p class="section-sub" style="margin-top:8px;">Could not load ticker changes.</p>';
+  }
+}
+
+function loadMarketChanges() {
+  loadThematicEtfEvents();
+  loadTickerChanges();
+}
+
+// ---------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------
 async function loadData() {
@@ -843,6 +941,7 @@ async function loadData() {
 
 initChartHover();
 loadData();
+loadMarketChanges();
 </script>
 
 </body>

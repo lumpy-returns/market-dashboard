@@ -1,0 +1,90 @@
+{
+  "updated_utc": "2026-09-30T16:00:00+00:00",
+  "window_months": 6,
+  "events": [
+    {
+      "ticker": "DRAM",
+      "theme": "Memory Chips / AI Hardware",
+      "event": "Listed",
+      "date": "2026-04-02",
+      "issuer": "Roundhill",
+      "source": "etfdb.com"
+    },
+    {
+      "ticker": "NASA",
+      "theme": "Space Exploration",
+      "event": "Listed",
+      "date": "2026-03-30",
+      "issuer": "Tema",
+      "source": "etfdb.com"
+    },
+    {
+      "ticker": "IVEP",
+      "theme": "AI Power & Infrastructure",
+      "event": "Listed",
+      "date": "2026-04-08",
+      "issuer": "Wedbush / Dan Ives",
+      "source": "etfdb.com"
+    },
+    {
+      "ticker": "REXC",
+      "theme": "Rare Earths ex-China",
+      "event": "Listed",
+      "date": "2026-04-14",
+      "issuer": "Sprott",
+      "source": "stockanalysis.com"
+    },
+    {
+      "ticker": "SECU",
+      "theme": "Securitized Debt / MBS",
+      "event": "Listed",
+      "date": "2026-05-01",
+      "date_precision": "approximate",
+      "issuer": "iShares",
+      "source": "wealthmanagement.com"
+    },
+    {
+      "ticker": "IQMM",
+      "theme": "Stablecoin-Compliant Money Market",
+      "event": "Listed",
+      "date": "2026-06-01",
+      "date_precision": "approximate",
+      "issuer": "ProShares",
+      "source": "wealthmanagement.com"
+    },
+    {
+      "ticker": "LOHA",
+      "theme": "Heavy Assets / Low Obsolescence",
+      "event": "Listed",
+      "date": "2026-06-01",
+      "date_precision": "approximate",
+      "issuer": "Roundhill",
+      "source": "wealthmanagement.com"
+    },
+    {
+      "ticker": "HALX",
+      "theme": "Heavy Assets / Low Obsolescence",
+      "event": "Listed",
+      "date": "2026-07-01",
+      "date_precision": "approximate",
+      "issuer": "Tuttle Capital",
+      "source": "wealthmanagement.com"
+    },
+    {
+      "ticker": "EMEM",
+      "theme": "Emerging Markets",
+      "event": "Delisted",
+      "date": "2026-09-25",
+      "issuer": "Sophus Capital",
+      "source": "nasdaq.com"
+    },
+    {
+      "ticker": "EMSC",
+      "theme": "Emerging Market Small-Cap",
+      "event": "Delisted",
+      "date": "2026-09-25",
+      "issuer": "Sophus Capital",
+      "source": "nasdaq.com"
+    }
+  ]
+}

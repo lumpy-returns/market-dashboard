@@ -545,9 +545,12 @@ def fetch_all(all_pairs):
     return series
 
 
-def build_section(pairs, series_by_ticker, histories):
+def build_section(pairs, series_by_ticker, histories, section_key, failed):
     """Build display rows for a section, and collect each ticker's daily OHLC
-    history into `histories` (keyed by ticker) as a side effect."""
+    history into `histories` (keyed by ticker) as a side effect. Any ticker
+    that comes back with no usable data is appended to `failed`, tagged with
+    which section it belongs to -- this is what the monthly ticker-health
+    check reads to find candidates for a rename or a delisting."""
     rows = []
     for ticker, name in pairs:
         s = series_by_ticker.get(ticker, {})
@@ -569,6 +572,7 @@ def build_section(pairs, series_by_ticker, histories):
             rows.append(entry)
         else:
             print(f"SKIP {ticker:12s} {name} (no data)")
+            failed.append({"ticker": ticker, "name": name, "section": section_key})
     return rows
 
 
@@ -609,8 +613,15 @@ def main():
     series_by_ticker = fetch_all(unique_pairs)
 
     histories = {}
-    macro_data = {key: build_section(pairs, series_by_ticker, histories) for key, pairs in MACRO.items()}
-    equities_data = {key: build_section(pairs, series_by_ticker, histories) for key, pairs in EQUITIES.items()}
+    failed_tickers = []
+    macro_data = {
+        key: build_section(pairs, series_by_ticker, histories, f"macro.{key}", failed_tickers)
+        for key, pairs in MACRO.items()
+    }
+    equities_data = {
+        key: build_section(pairs, series_by_ticker, histories, f"equities.{key}", failed_tickers)
+        for key, pairs in EQUITIES.items()
+    }
     breadth_data = compute_breadth(equities_data)
 
     # VIX-based sentiment read, if we have it
@@ -656,9 +667,24 @@ def main():
         if fname not in current_files:
             os.remove(os.path.join(history_dir, fname))
 
+    # Tickers with no usable data this run -- read by the monthly ticker
+    # health-check task, which researches whether each one was renamed
+    # (and patches this file's ticker) or delisted (and moves it to
+    # data/delisted_instruments.json instead). Written every run, even when
+    # empty, so the health check always has a current, authoritative list
+    # rather than a stale one from whenever a ticker last failed.
+    failed_path = os.path.join(os.path.dirname(__file__), "data", "failed_tickers.json")
+    with open(failed_path, "w") as f:
+        json.dump(
+            {"checked_utc": datetime.now(timezone.utc).isoformat(), "failed": failed_tickers},
+            f,
+            indent=2,
+        )
+
     total_rows = sum(len(v) for v in macro_data.values()) + sum(len(v) for v in equities_data.values())
     print(f"\nWrote {total_rows} instrument rows to {output_path}")
     print(f"Wrote {len(histories)} per-ticker history files to {history_dir}")
+    print(f"Wrote {len(failed_tickers)} failed ticker(s) to {failed_path}")
 
 
 if __name__ == "__main__":
