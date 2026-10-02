@@ -45,22 +45,22 @@
     padding-bottom: 16px;
     margin-bottom: 16px;
   }
-  h1 { font-size: 18px; letter-spacing: 2px; margin: 0; color: var(--accent); text-transform: uppercase; font-weight: 700; }
-  #last-updated { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; }
+  h1 { font-size: 17px; letter-spacing: 0.5px; margin: 0; color: var(--accent); text-transform: uppercase; font-weight: 700; }
+  #last-updated { color: var(--muted); font-size: 11px; letter-spacing: 0; }
   #status { color: var(--muted); font-size: 13px; padding: 24px 0; }
 
-  .toolbar { margin-bottom: 24px; }
-  .toolbar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .toolbar { margin-bottom: 16px; }
+  .toolbar-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
   .toolbar-row:last-child { margin-bottom: 0; }
-  .toolbar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); width: 52px; flex-shrink: 0; }
+  .toolbar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0; color: var(--muted); width: 52px; flex-shrink: 0; }
   .toolbar-row button {
-    padding: 10px 20px;
+    padding: 5px 14px;
     background: var(--panel);
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: inherit;
-    font-size: 12px;
-    letter-spacing: 0.5px;
+    font-size: 11px;
+    letter-spacing: 0;
     cursor: pointer;
   }
   .toolbar-row button.active { color: var(--accent); border-color: var(--accent); background: rgba(255,159,10,0.08); }
@@ -73,20 +73,21 @@
   .mini-chart-card-body { margin-top: 4px; }
   .mini-chart-card-body svg { display: block; width: 100%; height: auto; }
 
-  .section { margin-top: 40px; }
-  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .section { margin-top: 26px; }
+  .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 3px; }
   .section-num { color: var(--accent); font-size: 20px; font-weight: 700; }
   .section-num::before { content: "["; }
   .section-num::after { content: "]"; }
-  .section-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-  .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
-  .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
+  .section-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 0.3px; }
+  .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0; margin: 0 0 8px 0; }
+  .subtable-label { color: var(--accent); font-size: 12px; margin: 16px 0 6px 0; }
 
-  table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); font-weight: 600; }
   th, td {
-    padding: 9px 12px;
+    padding: 3px 10px;
     text-align: right;
-    font-size: 12.5px;
+    font-size: 13px;
+    line-height: 1.5;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
     overflow: hidden;
@@ -98,13 +99,15 @@
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
     color: var(--muted);
-    font-size: 10.5px;
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0;
     font-weight: 700;
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid var(--accent);
+    padding-top: 4px;
+    padding-bottom: 4px;
   }
   th.sortable:hover { color: var(--accent); }
   th .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
@@ -114,13 +117,13 @@
   .neutral { color: var(--muted); }
   .holdings-row { display: none; }
   .holdings-row.open { display: table-row; }
-  .holdings-row td { background: var(--panel-hover); text-align: left; color: var(--muted); font-size: 11.5px; padding: 8px 12px; }
+  .holdings-row td { background: var(--panel-hover); text-align: left; color: var(--muted); font-size: 11.5px; padding: 6px 10px; }
   .chip { display: inline-block; border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; margin-right: 6px; color: var(--text); }
 
   .breadth-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  .breadth-card { background: var(--panel); border: 1px solid var(--border); padding: 16px; }
-  .breadth-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .breadth-card .value { font-size: 22px; margin-top: 6px; }
+  .breadth-card { background: var(--panel); border: 1px solid var(--border); padding: 10px 14px; }
+  .breadth-card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0; }
+  .breadth-card .value { font-size: 22px; margin-top: 4px; font-weight: 700; }
 
   /* Traffic light dots */
   .dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
