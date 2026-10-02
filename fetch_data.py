@@ -4,7 +4,7 @@ Pulls macro + equities data from Yahoo Finance (via yfinance, no API key needed)
 and writes it to data/market_data.json.
 
 Each instrument gets:
-  - price, 1D/1W/1M/3M/1Y % change, % from 52W high, 5-day and 20-day sparklines
+  - price, 1D/1W/1M/3M/1Y % change, % from 52W high, 20-day and 3-month sparklines
   - EMA-based trend signal (10 EMA vs 20 EMA, low/high vs 20 EMA) for the
     "Traffic Light" view
 
@@ -349,8 +349,8 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     three_month_ago = offset_price(closes, 63)
     year_ago = offset_price(closes, 252)
     high_52w = float(closes.max())
-    sparkline = [round(v, 2) for v in closes.iloc[-5:].tolist()]
     sparkline_20d = [round(v, 2) for v in closes.iloc[-20:].tolist()]
+    sparkline_3m = [round(v, 2) for v in closes.iloc[-63:].tolist()]
 
     # --- EMA-based trend signal ---
     ema10 = closes.ewm(span=10, adjust=False).mean().iloc[-1]
@@ -459,8 +459,8 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
         "chg_3m_pct": pct_change(last_price, three_month_ago),
         "chg_1y_pct": pct_change(last_price, year_ago),
         "pct_from_52w_high": pct_change(last_price, high_52w),
-        "sparkline": sparkline,
         "sparkline_20d": sparkline_20d,
+        "sparkline_3m": sparkline_3m,
         "trend": trend,
         "weekly_trend": weekly_trend,
         "cond_10_gt_20": cond_10_gt_20,

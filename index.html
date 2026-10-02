@@ -8,7 +8,7 @@
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #000000;
@@ -31,7 +31,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "Share Tech Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
     font-variant-numeric: lining-nums tabular-nums;
     padding: 24px;
     max-width: 1200px;
@@ -139,7 +139,7 @@
     background: var(--panel);
     border: 1px solid var(--accent);
     box-shadow: 0 0 24px rgba(255,159,10,0.12), 0 12px 32px rgba(0,0,0,0.6);
-    font-family: "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "Share Tech Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
   }
   .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
   .chart-panel-title { font-weight: 700; font-size: 12.5px; }
@@ -178,7 +178,7 @@
 <div id="app" style="display:none;"></div>
 
 <div id="market-changes" class="section" style="margin-top:56px;">
-  <div class="section-head"><h2 class="section-title">Market Changes</h2></div>
+  <div class="section-head"><span class="section-num">04</span><h2 class="section-title">New ETF Listings / Delistings</h2></div>
   <p class="section-sub">SCANNED MONTHLY &middot; THEMATIC ETF LISTINGS / DELISTINGS, LAST 6 MONTHS</p>
   <div id="thematic-etf-table"><p class="section-sub" style="margin-top:8px;">Loading…</p></div>
 
@@ -424,8 +424,8 @@ const trafficColumns = [
   { label: 'Daily Trend', field: 'trend', type: 'dot' },
   { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot' },
-  { label: '5D', field: 'sparkline', type: 'sparkline', sortable: false },
   { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
+  { label: '3M', field: 'sparkline_3m', type: 'sparkline', sortable: false },
 ];
 
 // ---------------------------------------------------------------------
