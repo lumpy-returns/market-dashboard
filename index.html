@@ -3,33 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #ffffff;
-    --panel: #ffffff;
-    --panel-hover: #f2f1ec;
-    --border: #dcd7cc;
-    --text: #1a1a1a;
-    --muted: #6b6660;
-    --up: #1f7a4c;
-    --down: #a4302a;
-    --neutral-dot: #b8860b;
-    --accent: #1d3f6e;
-    --dot-green: #2e8b57;
-    --dot-red: #c0392b;
-    --dot-yellow: #d4a017;
-    --dot-grey: #9a958c;
+    --bg: #000000;
+    --panel: #0a0a0a;
+    --panel-hover: #171a15;
+    --border: #2b2b2b;
+    --text: #e8e6de;
+    --muted: #8a8a82;
+    --up: #00d964;
+    --down: #ff3b30;
+    --neutral-dot: #ff9f0a;
+    --accent: #ff9f0a;
+    --dot-green: #00d964;
+    --dot-red: #ff3b30;
+    --dot-yellow: #ffcc00;
+    --dot-grey: #5a5a54;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: Cambria, Garamond, "EB Garamond", Georgia, serif;
+    font-family: "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
     font-variant-numeric: lining-nums tabular-nums;
     padding: 24px;
     max-width: 1200px;
@@ -39,12 +41,12 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--accent);
     padding-bottom: 16px;
     margin-bottom: 16px;
   }
-  h1 { font-size: 20px; letter-spacing: 1px; margin: 0; }
-  #last-updated { color: var(--muted); font-size: 12px; }
+  h1 { font-size: 18px; letter-spacing: 2px; margin: 0; color: var(--accent); text-transform: uppercase; font-weight: 700; }
+  #last-updated { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; }
   #status { color: var(--muted); font-size: 13px; padding: 24px 0; }
 
   .toolbar { margin-bottom: 24px; }
@@ -61,7 +63,7 @@
     letter-spacing: 0.5px;
     cursor: pointer;
   }
-  .toolbar-row button.active { color: var(--accent); border-color: var(--accent); }
+  .toolbar-row button.active { color: var(--accent); border-color: var(--accent); background: rgba(255,159,10,0.08); }
 
   .mini-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 28px 0; }
   .mini-chart-card { border: 1px solid var(--border); background: var(--panel); padding: 8px 10px; }
@@ -74,7 +76,7 @@
   .section { margin-top: 40px; }
   .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
   .section-num { color: var(--accent); font-size: 13px; font-weight: bold; }
-  .section-title { font-size: 24px; font-weight: 700; margin: 0; }
+  .section-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
   .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
   .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
 
@@ -93,13 +95,14 @@
   tr.has-holdings td:first-child { cursor: pointer; }
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
-    color: var(--text);
+    color: var(--muted);
     font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 700;
     cursor: pointer;
     user-select: none;
+    border-bottom: 1px solid var(--accent);
   }
   th.sortable:hover { color: var(--accent); }
   th .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
@@ -134,9 +137,9 @@
     z-index: 50;
     width: 480px;
     background: var(--panel);
-    border: 1px solid var(--border);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.16);
-    font-family: Cambria, Garamond, "EB Garamond", Georgia, serif;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 24px rgba(255,159,10,0.12), 0 12px 32px rgba(0,0,0,0.6);
+    font-family: "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
   }
   .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
   .chart-panel-title { font-weight: 700; font-size: 12.5px; }
