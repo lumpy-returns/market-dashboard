@@ -75,7 +75,9 @@
 
   .section { margin-top: 40px; }
   .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
-  .section-num { color: var(--accent); font-size: 13px; font-weight: bold; }
+  .section-num { color: var(--accent); font-size: 20px; font-weight: 700; }
+  .section-num::before { content: "["; }
+  .section-num::after { content: "]"; }
   .section-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
   .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.5px; margin: 0 0 16px 0; }
   .subtable-label { color: var(--accent); font-size: 12px; margin: 24px 0 8px 0; }
