@@ -504,7 +504,7 @@ function buildPerformanceView(data) {
 
 function buildTrafficView(data) {
   let html = `<div class="section">
-    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro — Trend Signals</h2></div>
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro</h2></div>
     <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&gt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW</p>`;
   let macroShown = 0;
   MACRO_GROUPS.forEach(([key, label]) => {
@@ -518,7 +518,7 @@ function buildTrafficView(data) {
   html += '</div>';
 
   html += `<div class="section">
-    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities — Trend Signals</h2></div>
+    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities</h2></div>
     <p class="section-sub">CLICK ANY COLUMN HEADER TO SORT</p>`;
   let equitiesShown = 0;
   EQUITIES_GROUPS.forEach(([key, label]) => {
