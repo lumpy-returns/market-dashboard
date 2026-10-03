@@ -1,23 +1,7 @@
 {
-  "updated_utc": "2026-09-30T16:00:00+00:00",
+  "updated_utc": "2026-10-03T08:04:29+00:00",
   "window_months": 6,
   "events": [
-    {
-      "ticker": "DRAM",
-      "theme": "Memory Chips / AI Hardware",
-      "event": "Listed",
-      "date": "2026-04-02",
-      "issuer": "Roundhill",
-      "source": "etfdb.com"
-    },
-    {
-      "ticker": "NASA",
-      "theme": "Space Exploration",
-      "event": "Listed",
-      "date": "2026-03-30",
-      "issuer": "Tema",
-      "source": "etfdb.com"
-    },
     {
       "ticker": "IVEP",
       "theme": "AI Power & Infrastructure",
@@ -71,6 +55,70 @@
       "source": "wealthmanagement.com"
     },
     {
+      "ticker": "CRED",
+      "theme": "Research-Enhanced Real Estate",
+      "event": "Delisted",
+      "date": "2026-07-24",
+      "issuer": "Columbia Threadneedle",
+      "source": "businesswire.com"
+    },
+    {
+      "ticker": "CZAR",
+      "theme": "Natural Monopoly Businesses",
+      "event": "Delisted",
+      "date": "2026-07-28",
+      "issuer": "Themes ETF Trust",
+      "source": "globenewswire.com"
+    },
+    {
+      "ticker": "HWAY",
+      "theme": "US Infrastructure",
+      "event": "Delisted",
+      "date": "2026-07-28",
+      "issuer": "Themes ETF Trust",
+      "source": "globenewswire.com"
+    },
+    {
+      "ticker": "USRD",
+      "theme": "US R&D Champions",
+      "event": "Delisted",
+      "date": "2026-07-28",
+      "issuer": "Themes ETF Trust",
+      "source": "globenewswire.com"
+    },
+    {
+      "ticker": "PRVT",
+      "theme": "Listed Private Asset Managers",
+      "event": "Delisted",
+      "date": "2026-09-04",
+      "issuer": "Tema ETFs",
+      "source": "temaetfs.com"
+    },
+    {
+      "ticker": "LGCF",
+      "theme": "US Cash Flow Champions",
+      "event": "Delisted",
+      "date": "2026-09-21",
+      "issuer": "Themes ETF Trust",
+      "source": "prnewswire.com"
+    },
+    {
+      "ticker": "SMCF",
+      "theme": "US Small-Cap Cash Flow Champions",
+      "event": "Delisted",
+      "date": "2026-09-21",
+      "issuer": "Themes ETF Trust",
+      "source": "prnewswire.com"
+    },
+    {
+      "ticker": "LIMI",
+      "theme": "Lithium & Battery Metal Miners",
+      "event": "Delisted",
+      "date": "2026-09-21",
+      "issuer": "Themes ETF Trust",
+      "source": "prnewswire.com"
+    },
+    {
       "ticker": "EMEM",
       "theme": "Emerging Markets",
       "event": "Delisted",
@@ -85,6 +133,14 @@
       "date": "2026-09-25",
       "issuer": "Sophus Capital",
       "source": "nasdaq.com"
+    },
+    {
+      "ticker": "NRR",
+      "theme": "NEAR Protocol Staking / Crypto",
+      "event": "Listed",
+      "date": "2026-09-29",
+      "issuer": "Bitwise",
+      "source": "theblock.co"
     }
   ]
 }
