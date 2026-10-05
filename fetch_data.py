@@ -33,19 +33,15 @@ MACRO = {
     #     ("YM=F", "Dow Futures"),
     #     ("RTY=F", "Russell 2000 Futures"),
     # ],
+    # Foreign indices removed -- EWU/EWG/EWJ/EWH in the country section are
+    # the dollar-priced, tradable versions of the same markets.
     "global_indices": [
         ("^GSPC", "S&P 500"),
-        ("^FTSE", "FTSE 100"),
-        ("^GDAXI", "DAX"),
-        ("^N225", "Nikkei 225"),
-        ("^HSI", "Hang Seng"),
-        ("^STOXX50E", "Euro Stoxx 50"),
     ],
+    # 10Y only; a synthetic "10Y - 3M" curve-spread row is appended in
+    # main() from ^TNX and ^IRX (13-week bill, downloaded as an aux ticker).
     "yields": [
-        ("^IRX", "13-Week T-Bill"),
-        ("^FVX", "5-Year Treasury"),
         ("^TNX", "10-Year Treasury"),
-        ("^TYX", "30-Year Treasury"),
     ],
     "energy": [
         ("CL=F", "WTI Crude"),
@@ -69,9 +65,11 @@ MACRO = {
     ],
 }
 
-# Yahoo's CBOE-derived yield tickers are quoted at 10x the real yield
-# (e.g. a 4.25% 10-year shows as 42.50 on ^TNX). Divide by 10 to correct.
-YIELD_TICKERS = {t for t, _ in MACRO["yields"]}
+# Yield tickers get yield-style formatting (4 decimals, 1D change in bps).
+# Yahoo used to quote CBOE yield indices at 10x (42.50 = 4.25%) and this
+# script divided by 10 to compensate; Yahoo now quotes the real yield
+# (4.25), so that division made every yield display 10x too small.
+YIELD_TICKERS = {t for t, _ in MACRO["yields"]} | {"10Y-3M"}
 
 EQUITIES = {
     "major_etfs": [
@@ -100,24 +98,6 @@ EQUITIES = {
         ("XLRE", "Real Estate"),
         ("XLU", "Utilities"),
         ("XLC", "Communication Services"),
-    ],
-    # Invesco renamed this entire ETF suite (old Rydex-legacy tickers -> the
-    # RSP-prefixed scheme, to visually match the flagship RSP fund) effective
-    # June 2024. The old tickers (RYT, RYF, RYH, RCD, RHS, RYE, RGI, RTM,
-    # EWRE, RYU, EWCO) are being phased out on Yahoo Finance -- most already
-    # return no data at all, and the rest will eventually follow.
-    "sectors_ew": [
-        ("RSPT", "Technology (EW)"),
-        ("RSPF", "Financials (EW)"),
-        ("RSPH", "Health Care (EW)"),
-        ("RSPD", "Consumer Discretionary (EW)"),
-        ("RSPS", "Consumer Staples (EW)"),
-        ("RSPG", "Energy (EW)"),
-        ("RSPN", "Industrials (EW)"),
-        ("RSPM", "Materials (EW)"),
-        ("RSPR", "Real Estate (EW)"),
-        ("RSPU", "Utilities (EW)"),
-        ("RSPC", "Communication Services (EW)"),
     ],
     "themes": [
         # Original set
@@ -155,7 +135,6 @@ EQUITIES = {
         ("BOTZ", "Robotics & AI"),
         ("ITB", "Home Construction"),
         ("ARKG", "Genomics"),
-        ("ARKQ", "Autonomous Tech & Robotics"),
         ("DTCR", "Data Centers & Digital Infrastructure"),
         ("IYT", "Transportation"),
         ("OIH", "Oil Services"),
@@ -166,19 +145,12 @@ EQUITIES = {
         ("IHF", "Health Care Providers"),
         ("IAI", "Broker-Dealers & Exchanges"),
         ("MOO", "Agribusiness"),
-        ("PPH", "Pharmaceuticals"),
-        ("FTXR", "Transportation"),
         ("TAN", "Solar"),
-        ("ARKF", "Blockchain & Fintech"),
-        ("ARKX", "Space & Defense Innovation"),
-        ("PJP", "Pharmaceuticals"),
-        ("XPH", "Pharmaceuticals"),
         ("KIE", "Insurance"),
         ("XSW", "Software & Services"),
         ("XRT", "Retail"),
         ("URNJ", "Junior Uranium Miners"),
         ("BKCH", "Blockchain Companies"),
-        ("XTN", "Transportation"),
         ("KBWP", "Property & Casualty Insurance"),
         ("ESPO", "Video Games & Esports"),
         ("BETZ", "Sports Betting & Online Gaming"),
@@ -254,6 +226,25 @@ TOP_HOLDINGS = {
 }
 
 
+# Equal-weight twin of each cap-weighted sector ETF. Not shown as rows any
+# more -- downloaded only to compute each sector's "EW vs CW" column (is the
+# typical stock in the sector keeping up with its mega-caps?). Invesco
+# renamed this suite in June 2024 (RYT/RYF/RYH/RCD/RHS/RYE/RGI/RTM/EWRE/RYU/
+# EWCO -> RSP*); see data/delisted_instruments.json.
+SECTOR_EW_PAIRS = {
+    "XLK": ("RSPT", "Technology (EW)"),
+    "XLF": ("RSPF", "Financials (EW)"),
+    "XLV": ("RSPH", "Health Care (EW)"),
+    "XLY": ("RSPD", "Consumer Discretionary (EW)"),
+    "XLP": ("RSPS", "Consumer Staples (EW)"),
+    "XLE": ("RSPG", "Energy (EW)"),
+    "XLI": ("RSPN", "Industrials (EW)"),
+    "XLB": ("RSPM", "Materials (EW)"),
+    "XLRE": ("RSPR", "Real Estate (EW)"),
+    "XLU": ("RSPU", "Utilities (EW)"),
+    "XLC": ("RSPC", "Communication Services (EW)"),
+}
+
 def safe_ticker_filename(ticker):
     """Filesystem- and URL-safe stand-in for a ticker, used to name its
     history file. Deliberately NOT percent-encoding (e.g. urllib.parse.quote,
@@ -283,6 +274,79 @@ def offset_price(series, offset):
     return float(series.iloc[0])
 
 
+TREND_ORDER = {"red": 0, "yellow": 1, "green": 2}
+
+
+def daily_trend_signal(closes, highs, lows):
+    """Daily Traffic Light dot: green when 10 EMA > 20 EMA and today's low
+    holds above the 20 EMA, red when 10 EMA < 20 EMA and today's high is
+    below the 20 EMA, yellow otherwise. Pulled out into a helper so the same
+    rule can be re-run on data ending yesterday (for "what changed today")."""
+    if len(closes) < 21:
+        return None
+    ema10 = closes.ewm(span=10, adjust=False).mean().iloc[-1]
+    ema20 = closes.ewm(span=20, adjust=False).mean().iloc[-1]
+    low, high = float(lows.iloc[-1]), float(highs.iloc[-1])
+    if ema10 > ema20 and low > ema20:
+        return "green"
+    if ema10 <= ema20 and high < ema20:
+        return "red"
+    return "yellow"
+
+
+def weekly_frame(closes, highs, lows, opens=None):
+    cols = {"close": closes, "high": highs, "low": lows}
+    agg = {"close": "last", "high": "max", "low": "min"}
+    if opens is not None:
+        cols["open"] = opens
+        agg["open"] = "first"
+    return pd.DataFrame(cols).resample("W-FRI").agg(agg).dropna()
+
+
+def weekly_trend_signal(weekly):
+    """Same rule as the daily dot, on weekly bars (needs a warmed-up 20-week EMA)."""
+    if weekly is None or len(weekly) < 21:
+        return None
+    return daily_trend_signal(weekly["close"], weekly["high"], weekly["low"])
+
+
+def long_trend_signal(closes):
+    """Long-term trend check (Minervini / Weinstein style), daily bars:
+    green = price > 50-day SMA > 200-day SMA and the 200-day is rising
+    (vs. ~1 month ago); red = price below a falling 200-day; else yellow."""
+    if len(closes) < 222:
+        return None
+    sma50 = closes.rolling(50).mean()
+    sma200 = closes.rolling(200).mean()
+    c, s50, s200 = float(closes.iloc[-1]), float(sma50.iloc[-1]), float(sma200.iloc[-1])
+    rising = s200 > float(sma200.iloc[-22])
+    if c > s50 > s200 and rising:
+        return "green"
+    if c < s200 and not rising:
+        return "red"
+    return "yellow"
+
+
+# IBD-style relative strength: most weight on the latest quarter.
+RS_WEIGHTS = ((63, 0.4), (126, 0.2), (189, 0.2), (252, 0.2))
+
+
+def rs_raw_score(closes, offset=0):
+    """Weighted 3/6/9/12-month return ending `offset` trading days ago.
+    Turned into a 1-99 percentile rank across the equity universe in main();
+    ranking makes it relative (to each other and to SPY, which is in the set)."""
+    if len(closes) <= 252 + offset:
+        return None
+    end = float(closes.iloc[-1 - offset])
+    score = 0.0
+    for days, weight in RS_WEIGHTS:
+        start = float(closes.iloc[-1 - offset - days])
+        if start == 0:
+            return None
+        score += weight * (end / start - 1)
+    return score
+
+
 def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=False):
     """Compute display stats + trend signal for one ticker."""
     if closes is None or closes.empty:
@@ -301,7 +365,7 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     if combined.empty:
         return None
 
-    scale = 10.0 if is_yield else 1.0  # correct Yahoo's 10x yield quoting convention
+    scale = 1.0  # Yahoo now quotes yields directly (see YIELD_TICKERS note)
     closes = combined["close"] / scale
     highs = combined["high"] / scale
     lows = combined["low"] / scale
@@ -313,7 +377,12 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     month_ago = offset_price(closes, 21)
     three_month_ago = offset_price(closes, 63)
     year_ago = offset_price(closes, 252)
-    high_52w = float(closes.max())
+    six_month_ago = offset_price(closes, 126)
+    # 52-week window only -- we download 2 years, so closes.max() over the
+    # whole series was quietly a 2-year high.
+    window_52w = closes.iloc[-252:]
+    high_52w = float(window_52w.max())
+    days_since_52w_high = int(len(window_52w) - 1 - int(window_52w.values.argmax()))
     sparkline_20d = [round(v, 2) for v in closes.iloc[-20:].tolist()]
     sparkline_3m = [round(v, 2) for v in closes.iloc[-63:].tolist()]
 
@@ -341,37 +410,39 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     else:
         state_vs_10ema = "grey"
 
-    if cond_10_gt_20 and cond_low_gt_20:
-        trend = "green"
-    elif (not cond_10_gt_20) and cond_high_lt_20:
-        trend = "red"
-    else:
-        trend = "yellow"
+    trend = daily_trend_signal(closes, highs, lows) or "yellow"
 
     # --- Weekly trend signal (+ weekly OHLC history for the 12M chart view) ---
     # Same EMA10-vs-EMA20 logic, just resampled to weekly bars first. Reuses
     # the daily close/high/low(/open) we already have -- no extra Yahoo calls needed.
-    weekly_cols = {"close": closes, "high": highs, "low": lows}
-    weekly_agg = {"close": "last", "high": "max", "low": "min"}
-    if opens_s is not None:
-        weekly_cols["open"] = opens_s
-        weekly_agg["open"] = "first"
-    weekly = pd.DataFrame(weekly_cols).resample("W-FRI").agg(weekly_agg).dropna()
-    weekly_trend = None
-    if len(weekly) >= 21:  # need a warmed-up 20-week EMA
-        w_ema10 = weekly["close"].ewm(span=10, adjust=False).mean().iloc[-1]
-        w_ema20 = weekly["close"].ewm(span=20, adjust=False).mean().iloc[-1]
-        w_low = float(weekly["low"].iloc[-1])
-        w_high = float(weekly["high"].iloc[-1])
-        w_cond_10_gt_20 = bool(w_ema10 > w_ema20)
-        w_cond_low_gt_20 = bool(w_low > w_ema20)
-        w_cond_high_lt_20 = bool(w_high < w_ema20)
-        if w_cond_10_gt_20 and w_cond_low_gt_20:
-            weekly_trend = "green"
-        elif (not w_cond_10_gt_20) and w_cond_high_lt_20:
-            weekly_trend = "red"
-        else:
-            weekly_trend = "yellow"
+    weekly = weekly_frame(closes, highs, lows, opens_s)
+    weekly_trend = weekly_trend_signal(weekly)
+
+    # --- Long-term trend (price vs 50/200-day SMA, 200-day slope) ---
+    long_trend = long_trend_signal(closes)
+
+    # --- Same three signals as of the previous bar, for "what changed today" ---
+    # Recomputed from history rather than diffed against the last saved JSON,
+    # so re-running the job (or a manual trigger) never wipes out the feed.
+    trend_prev = weekly_trend_prev = long_trend_prev = None
+    if len(closes) > 22:
+        c1, h1, l1 = closes.iloc[:-1], highs.iloc[:-1], lows.iloc[:-1]
+        trend_prev = daily_trend_signal(c1, h1, l1)
+        weekly_trend_prev = weekly_trend_signal(weekly_frame(c1, h1, l1))
+        long_trend_prev = long_trend_signal(c1)
+
+    # --- Extension from the 20 EMA in ATR units (Wilder ATR-14) ---
+    prev_c = closes.shift(1)
+    true_range = pd.concat(
+        [highs - lows, (highs - prev_c).abs(), (lows - prev_c).abs()], axis=1
+    ).max(axis=1)
+    atr14 = float(true_range.ewm(alpha=1 / 14, adjust=False).mean().iloc[-1])
+    ext_atr = round((last_price - float(ema20)) / atr14, 2) if atr14 > 0 else None
+    atr_pct = round(atr14 / last_price * 100, 2) if last_price else None
+
+    # --- Relative strength raw scores (ranked across the universe in main) ---
+    rs_score = rs_raw_score(closes, 0)
+    rs_score_1w = rs_raw_score(closes, 5)
 
     # --- Daily OHLC + 20 EMA history, for the on-hover candlestick chart ---
     # EMA is computed over the full close series (already warmed up over 2y)
@@ -424,10 +495,24 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
         "chg_3m_pct": pct_change(last_price, three_month_ago),
         "chg_1y_pct": pct_change(last_price, year_ago),
         "pct_from_52w_high": pct_change(last_price, high_52w),
+        "days_since_52w_high": days_since_52w_high,
         "sparkline_20d": sparkline_20d,
         "sparkline_3m": sparkline_3m,
         "trend": trend,
         "weekly_trend": weekly_trend,
+        "long_trend": long_trend,
+        "trend_prev": trend_prev,
+        "weekly_trend_prev": weekly_trend_prev,
+        "long_trend_prev": long_trend_prev,
+        "ext_atr": ext_atr,
+        "atr_pct": atr_pct,
+        "rs_score": round(rs_score, 4) if rs_score is not None else None,
+        "_rs_score_1w": rs_score_1w,
+        # Academic momentum (Jegadeesh-Titman): skip the most recent month,
+        # which tends to mean-revert, when measuring the 6/12-month trend.
+        "chg_6m_pct": pct_change(last_price, six_month_ago),
+        "mom_12_1_pct": pct_change(month_ago, year_ago) if len(closes) > 252 else None,
+        "mom_6_1_pct": pct_change(month_ago, six_month_ago) if len(closes) > 126 else None,
         "cond_10_gt_20": cond_10_gt_20,
         "cond_low_gt_20": cond_low_gt_20,
         "cond_low_gt_10": cond_low_gt_10,
@@ -541,26 +626,185 @@ def build_section(pairs, series_by_ticker, histories, section_key, failed):
     return rows
 
 
-def compute_breadth(equities_data):
-    """Synthetic breadth/sentiment panel built from the equities section we already have.
-    Not a true NYSE advance/decline line (that needs full constituent data) --
-    this measures breadth across the tracked ETF/sector universe instead."""
-    all_rows = []
-    for section in equities_data.values():
-        all_rows.extend(section)
+# Downloaded only to feed the regime gauge -- not shown as rows anywhere.
+REGIME_AUX_TICKERS = [
+    ("^VIX3M", "VIX 3-Month"),
+    ("HYG", "High Yield Corporate Bond"),
+    ("IEF", "7-10 Year Treasury"),
+    ("RSP", "S&P 500 Equal Weight"),
+    ("^IRX", "13-Week T-Bill"),  # short leg of the 10Y-3M spread row
+]
 
-    def pct_positive(field):
-        vals = [r[field] for r in all_rows if r.get(field) is not None]
-        if not vals:
-            return None
-        positive = sum(1 for v in vals if v > 0)
-        return round(positive / len(vals) * 100, 1)
 
-    return {
-        "pct_positive_1d": pct_positive("chg_1d_pct"),
-        "pct_positive_1w": pct_positive("chg_1w_pct"),
-        "tracked_instruments": len(all_rows),
-    }
+def _close(series_by_ticker, ticker):
+    s = series_by_ticker.get(ticker, {}).get("close")
+    if s is None:
+        return None
+    s = s.dropna()
+    return s if not s.empty else None
+
+
+def _ratio_above_sma(a, b, window=50, offset=0):
+    """Is the a/b ratio above its own `window`-day SMA (as of `offset` bars ago)?"""
+    if a is None or b is None:
+        return None, None
+    ratio = (a / b).dropna()
+    if len(ratio) < window + offset + 1:
+        return None, None
+    sma = ratio.rolling(window).mean()
+    r, s = float(ratio.iloc[-1 - offset]), float(sma.iloc[-1 - offset])
+    return r > s, (r / s - 1) * 100
+
+
+def compute_regime(series_by_ticker, offset=0):
+    """Risk-on / risk-off composite: six independent yes/no checks that each
+    capture a different piece of "is this a market where momentum works?"."""
+    spy = _close(series_by_ticker, "SPY")
+    vix = _close(series_by_ticker, "^VIX")
+    vix3m = _close(series_by_ticker, "^VIX3M")
+    hyg, ief = _close(series_by_ticker, "HYG"), _close(series_by_ticker, "IEF")
+    rsp = _close(series_by_ticker, "RSP")
+    sphb, splv = _close(series_by_ticker, "SPHB"), _close(series_by_ticker, "SPLV")
+
+    checks = []
+
+    def add(key, label, passed, detail, why):
+        checks.append({"key": key, "label": label, "pass": passed, "detail": detail, "why": why})
+
+    for window in (50, 200):
+        passed = detail = None
+        if spy is not None and len(spy) > window + offset:
+            px = float(spy.iloc[-1 - offset])
+            sma = float(spy.rolling(window).mean().iloc[-1 - offset])
+            passed = px > sma
+            detail = f"{(px / sma - 1) * 100:+.1f}% vs {window}D"
+        add(f"spy_{window}", f"SPY > {window}D", passed, detail,
+            "Trend of the broad market" if window == 50 else "Primary bull/bear line")
+
+    passed = detail = None
+    if vix is not None and vix3m is not None:
+        both = pd.concat([vix, vix3m], axis=1, join="inner").dropna()
+        if len(both) > offset:
+            v, v3 = float(both.iloc[-1 - offset, 0]), float(both.iloc[-1 - offset, 1])
+            passed = v < v3
+            detail = f"VIX {v:.1f} / VIX3M {v3:.1f}"
+    add("vix_term", "VIX < VIX3M", passed, detail,
+        "Contango = calm; inversion = near-term fear")
+
+    for key, label, a, b, why in (
+        ("credit", "HYG/IEF > 50D", hyg, ief, "Credit risk appetite"),
+        ("breadth", "RSP/SPY > 50D", rsp, spy, "Equal-weight keeping up = broad participation"),
+        ("beta", "SPHB/SPLV > 50D", sphb, splv, "High beta leading low vol = risk appetite"),
+    ):
+        passed, dev = _ratio_above_sma(a, b, 50, offset)
+        add(key, label, passed, f"{dev:+.1f}% vs 50D" if dev is not None else None, why)
+
+    available = [c for c in checks if c["pass"] is not None]
+    score = sum(1 for c in available if c["pass"])
+    if not available:
+        label = None
+    else:
+        frac = score / len(available)
+        label = "Risk-On" if frac >= 5 / 6 - 1e-9 else ("Neutral" if frac >= 0.5 else "Risk-Off")
+    return {"score": score, "max": len(available), "label": label, "checks": checks}
+
+
+def percentile_rank(values):
+    """{key: score} -> {key: 1..99}, IBD-style (99 = strongest)."""
+    items = [(k, v) for k, v in values.items() if v is not None]
+    if not items:
+        return {}
+    if len(items) == 1:
+        return {items[0][0]: 99}
+    s = pd.Series(dict(items)).rank(method="average")
+    n = len(items)
+    return {k: int(round(1 + 98 * (r - 1) / (n - 1))) for k, r in s.items()}
+
+
+def apply_ranks(equities_data):
+    """RS rank (1-99) + its 1-week change, and the 12-1 momentum rank,
+    across every equity row (one score per unique ticker)."""
+    rows = [r for section in equities_data.values() for r in section]
+    by_ticker = {}
+    for r in rows:
+        by_ticker.setdefault(r["ticker"], r)
+    rs_now = percentile_rank({t: r.get("rs_score") for t, r in by_ticker.items()})
+    rs_1w = percentile_rank({t: r.get("_rs_score_1w") for t, r in by_ticker.items()})
+    mom = percentile_rank({t: r.get("mom_12_1_pct") for t, r in by_ticker.items()})
+    for r in rows:
+        t = r["ticker"]
+        r["rs_rank"] = rs_now.get(t)
+        r["rs_rank_chg"] = (rs_now[t] - rs_1w[t]) if (t in rs_now and t in rs_1w) else None
+        r["mom_12_1_rank"] = mom.get(t)
+
+
+def compute_signal_changes(macro_data, equities_data):
+    """Every Daily / Weekly / Long-term dot that flipped vs. the previous bar."""
+    changes, seen = [], set()
+    sections = [(f"macro.{k}", v) for k, v in macro_data.items()] + \
+               [(f"equities.{k}", v) for k, v in equities_data.items()]
+    for section_key, rows in sections:
+        for r in rows:
+            if r["ticker"] in seen:
+                continue
+            seen.add(r["ticker"])
+            for signal, now_f, prev_f in (
+                ("Weekly", "weekly_trend", "weekly_trend_prev"),
+                ("Daily", "trend", "trend_prev"),
+                ("Long-term", "long_trend", "long_trend_prev"),
+            ):
+                now, prev = r.get(now_f), r.get(prev_f)
+                if now and prev and now != prev:
+                    changes.append({
+                        "ticker": r["ticker"], "name": r["name"], "section": section_key,
+                        "signal": signal, "from": prev, "to": now,
+                        "direction": "up" if TREND_ORDER[now] > TREND_ORDER[prev] else "down",
+                        "rs_rank": r.get("rs_rank"),
+                    })
+    return changes
+
+
+RRG_WINDOW = 10   # weeks
+RRG_TAIL = 6      # weekly points per tail (oldest -> newest)
+
+
+def compute_rrg(series_by_ticker, groups, benchmark="SPY"):
+    """Relative Rotation Graph coordinates on weekly bars, vs. SPY.
+
+    JdK's exact RS-Ratio / RS-Momentum formulas are proprietary; this is the
+    common open approximation: RS = price / benchmark, RS-Ratio = 100 + the
+    z-score of RS over a rolling window, RS-Momentum = 100 + the z-score of
+    RS-Ratio over the same window. >100/>100 = Leading, >100/<100 =
+    Weakening, <100/<100 = Lagging, <100/>100 = Improving.
+    """
+    bench = _close(series_by_ticker, benchmark)
+    out = {}
+    if bench is None:
+        return out
+    bench_w = bench.resample("W-FRI").last().dropna()
+    for group_key, pairs in groups.items():
+        pts_out = []
+        for ticker, name in pairs:
+            c = _close(series_by_ticker, ticker)
+            if c is None:
+                continue
+            w = pd.concat([c.resample("W-FRI").last(), bench_w], axis=1, join="inner").dropna()
+            if len(w) < RRG_WINDOW * 2 + RRG_TAIL:
+                continue
+            rs = 100 * w.iloc[:, 0] / w.iloc[:, 1]
+            inf = [float("inf"), float("-inf")]
+            ratio = (100 + (rs - rs.rolling(RRG_WINDOW).mean()) / rs.rolling(RRG_WINDOW).std()).replace(inf, float("nan"))
+            mom = (100 + (ratio - ratio.rolling(RRG_WINDOW).mean()) / ratio.rolling(RRG_WINDOW).std()).replace(inf, float("nan"))
+            both = pd.concat([ratio, mom], axis=1).dropna().iloc[-RRG_TAIL:]
+            if both.empty:
+                continue
+            pts_out.append({
+                "ticker": ticker,
+                "name": name,
+                "points": [[round(float(a), 2), round(float(b), 2)] for a, b in both.values],
+            })
+        out[group_key] = pts_out
+    return out
 
 
 def main():
@@ -575,7 +819,10 @@ def main():
             seen.add(pair[0])
             unique_pairs.append(pair)
 
-    series_by_ticker = fetch_all(unique_pairs)
+    aux_pairs = REGIME_AUX_TICKERS + list(SECTOR_EW_PAIRS.values())
+    aux_pairs = [p for p in aux_pairs if p[0] not in seen]
+    download_pairs = unique_pairs + aux_pairs
+    series_by_ticker = fetch_all(download_pairs)
 
     histories = {}
     failed_tickers = []
@@ -587,28 +834,82 @@ def main():
         key: build_section(pairs, series_by_ticker, histories, f"equities.{key}", failed_tickers)
         for key, pairs in EQUITIES.items()
     }
-    breadth_data = compute_breadth(equities_data)
 
-    # VIX-based sentiment read, if we have it
-    vix_entry = next((r for r in macro_data.get("vol_dollar", []) if r["ticker"] == "^VIX"), None)
-    if vix_entry:
-        vix_level = vix_entry["price"]
-        if vix_level < 15:
-            sentiment = "Low volatility / risk-on"
-        elif vix_level < 25:
-            sentiment = "Normal / mixed"
-        elif vix_level < 35:
-            sentiment = "Elevated volatility / risk-off"
-        else:
-            sentiment = "Extreme volatility"
-        breadth_data["vix_level"] = vix_level
-        breadth_data["sentiment_label"] = sentiment
+    # Aux tickers aren't rows, but if one stops returning data the regime
+    # gauge / EW column silently degrades -- log it for the health check too.
+    for t, n in aux_pairs:
+        if _close(series_by_ticker, t) is None:
+            print(f"SKIP {t:12s} {n} (aux, no data)")
+            failed_tickers.append({"ticker": t, "name": n, "section": "aux"})
+
+    # 10Y - 3M curve spread as its own yields row (synthetic series).
+    tnx, irx = _close(series_by_ticker, "^TNX"), _close(series_by_ticker, "^IRX")
+    if tnx is not None and irx is not None:
+        spread = (tnx - irx).dropna()
+        o = spread.shift(1).fillna(spread)
+        try:
+            row = build_instrument(
+                "10Y-3M", "10Y − 3M Spread", spread,
+                pd.concat([o, spread], axis=1).max(axis=1),
+                pd.concat([o, spread], axis=1).min(axis=1),
+                opens=o, is_yield=True,
+            )
+        except Exception as exc:
+            print(f"FAIL 10Y-3M spread: {exc}")
+            row = None
+        if row:
+            # % changes of a spread that can sit near zero are meaningless.
+            for f in ("chg_1d_pct", "chg_1w_pct", "chg_1m_pct", "chg_3m_pct", "chg_1y_pct",
+                      "pct_from_52w_high", "chg_6m_pct", "mom_12_1_pct", "mom_6_1_pct"):
+                row[f] = None
+            row["link"] = "https://fred.stlouisfed.org/series/T10Y3M"
+            hist = row.pop("_history", None)
+            if hist:
+                histories["10Y-3M"] = hist
+            macro_data["yields"].append(row)
+
+    # EW vs CW: 3-month change in each sector's equal-weight / cap-weight ratio.
+    for r in equities_data.get("sectors", []):
+        pair = SECTOR_EW_PAIRS.get(r["ticker"])
+        cw = _close(series_by_ticker, r["ticker"])
+        ew = _close(series_by_ticker, pair[0]) if pair else None
+        r["ew_ticker"] = pair[0] if pair else None
+        r["ew_vs_cw_3m"] = None
+        if cw is not None and ew is not None:
+            ratio = (ew / cw).dropna()
+            if len(ratio) > 63:
+                r["ew_vs_cw_3m"] = round((float(ratio.iloc[-1]) / float(ratio.iloc[-64]) - 1) * 100, 2)
+
+    apply_ranks(equities_data)
+    for section in list(macro_data.values()) + list(equities_data.values()):
+        for r in section:
+            r.pop("_rs_score_1w", None)
+
+    regime = compute_regime(series_by_ticker, 0)
+    regime_prev = compute_regime(series_by_ticker, 1)
+    regime["prev_score"] = regime_prev["score"]
+    regime["prev_label"] = regime_prev["label"]
+
+    signal_changes = compute_signal_changes(macro_data, equities_data)
+
+    rrg = compute_rrg(series_by_ticker, {
+        "sectors": EQUITIES["sectors"],
+        "themes": EQUITIES["themes"],
+        "countries": EQUITIES["countries_developed"] + EQUITIES["countries_emerging"],
+    })
+
+    spy_close = _close(series_by_ticker, "SPY")
+    as_of = spy_close.index[-1].strftime("%Y-%m-%d") if spy_close is not None else None
+    prev_as_of = spy_close.index[-2].strftime("%Y-%m-%d") if spy_close is not None and len(spy_close) > 1 else None
+
 
     output = {
         "last_updated_utc": datetime.now(timezone.utc).isoformat(),
         "macro": macro_data,
         "equities": equities_data,
-        "breadth": breadth_data,
+        "regime": regime,
+        "signal_changes": {"as_of": as_of, "prev_as_of": prev_as_of, "changes": signal_changes},
+        "rrg": {"benchmark": "SPY", "period": "weekly", "window": RRG_WINDOW, "groups": rrg},
     }
 
     output_path = os.path.join(os.path.dirname(__file__), "data", "market_data.json")

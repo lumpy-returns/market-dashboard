@@ -25,6 +25,7 @@
     --dot-red: #ff3b30;
     --dot-yellow: #ffcc00;
     --dot-grey: #5a5a54;
+    --improving: #3fb8ff;
   }
   * { box-sizing: border-box; }
   body {
@@ -98,6 +99,9 @@
   tr.has-holdings td:first-child { cursor: pointer; }
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
+    white-space: normal;
+    vertical-align: bottom;
+    line-height: 1.25;
     color: var(--muted);
     font-size: 10px;
     text-transform: uppercase;
@@ -155,6 +159,63 @@
   .chart-range-toggle button.active { color: var(--accent); border-color: var(--accent); }
   #chart-panel-body { padding: 8px 10px 0 10px; }
   .chart-panel-legend { padding: 2px 12px 8px 12px; font-size: 10.5px; color: var(--neutral-dot); }
+
+  /* New metric cells */
+  .warn { color: var(--dot-yellow); }
+  .accent { color: var(--accent); }
+  .delta { font-size: 10px; margin-left: 5px; }
+  .badge { display: inline-block; font-size: 9.5px; padding: 0 4px; border: 1px solid var(--accent); color: var(--accent); line-height: 1.5; }
+  .dot.sm { width: 9px; height: 9px; }
+
+  /* Market regime banner */
+  .regime { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 1px solid var(--border); border-left: 4px solid var(--dot-grey); background: var(--panel); padding: 7px 12px; margin-bottom: 10px; }
+  .regime.on { border-left-color: var(--up); }
+  .regime.neutral { border-left-color: var(--dot-yellow); }
+  .regime.off { border-left-color: var(--down); }
+  .regime-main { display: flex; align-items: baseline; gap: 10px; min-width: 250px; }
+  .regime-kicker { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+  .regime-label { font-size: 20px; font-weight: 700; text-transform: uppercase; }
+  .regime-score { font-size: 12px; color: var(--muted); }
+  .regime-checks { display: flex; flex-wrap: wrap; gap: 5px; }
+  .regime-chip { font-size: 11px; border: 1px solid var(--border); padding: 1px 7px; color: var(--muted); cursor: help; }
+  .regime-chip.pass { border-color: rgba(0,217,100,0.45); color: var(--up); }
+  .regime-chip.fail { border-color: rgba(255,59,48,0.45); color: var(--down); }
+  .regime-chip .chip-detail { color: var(--muted); margin-left: 5px; }
+
+  /* What-changed feed */
+  .changes { border: 1px solid var(--border); background: var(--panel); margin: 0 0 14px 0; }
+  .changes summary { cursor: pointer; padding: 5px 12px; font-size: 11px; color: var(--accent); text-transform: uppercase; list-style: none; }
+  .changes summary::-webkit-details-marker { display: none; }
+  .changes-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; padding: 2px 12px 8px; max-height: 270px; overflow-y: auto; }
+  .changes-col h4 { margin: 2px 0 3px; font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 3px; position: sticky; top: 0; background: var(--panel); }
+  .change-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 1px 0; white-space: nowrap; overflow: hidden; }
+  .change-item .sig { color: var(--muted); width: 70px; flex-shrink: 0; font-size: 10px; text-transform: uppercase; }
+  .change-item .dots { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; color: var(--muted); font-size: 10px; }
+  .change-item .nm { color: var(--muted); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  /* Rotation (RRG) view */
+  .rrg-svg { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--border); }
+  .rrg-svg text { font-family: inherit; }
+  .rrg-svg .ticker-link { cursor: pointer; }
+  .quad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .quad { border: 1px solid var(--border); border-top-width: 2px; background: var(--panel); padding: 5px 10px 7px; min-width: 0; }
+  .quad h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; }
+  .quad-item { font-size: 12px; display: flex; gap: 6px; padding: 1px 0; white-space: nowrap; overflow: hidden; }
+  .quad-item .nm { color: var(--muted); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .quad-item .hd { margin-left: auto; color: var(--muted); flex-shrink: 0; }
+
+  /* Collapsible section (04) */
+  details.collapsible > summary { list-style: none; cursor: pointer; }
+  details.collapsible > summary::-webkit-details-marker { display: none; }
+  .collapse-hint { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-left: auto; }
+  details.collapsible[open] .collapse-hint { visibility: hidden; }
+
+  /* Academic Momentum view */
+  .decile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 760px) {
+    .changes-body, .quad-grid, .decile-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -164,12 +225,16 @@
   <div id="last-updated">Loading...</div>
 </header>
 
+<div id="regime-banner"></div>
+
 <div class="toolbar">
   <div class="toolbar-row">
     <span class="toolbar-label">Views</span>
     <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
     <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
     <button id="view-btn-minicharts" onclick="setView('minicharts')">Mini Charts</button>
+    <button id="view-btn-rotation" onclick="setView('rotation')">Rotation</button>
+    <button id="view-btn-academic" onclick="setView('academic')">Academic Momentum</button>
   </div>
   <div class="toolbar-row">
     <span class="toolbar-label">Filters</span>
@@ -179,18 +244,20 @@
   </div>
 </div>
 
+<div id="changes-panel"></div>
+
 <div id="status">Fetching data/market_data.json ...</div>
 <div id="app" style="display:none;"></div>
 
-<div id="market-changes" class="section" style="margin-top:56px;">
-  <div class="section-head"><span class="section-num">04</span><h2 class="section-title">New ETF Listings / Delistings</h2></div>
+<details id="market-changes" class="section collapsible" style="margin-top:40px;">
+  <summary><div class="section-head"><span class="section-num">04</span><h2 class="section-title">New ETF Listings / Delistings</h2><span class="collapse-hint">click to expand</span></div></summary>
   <p class="section-sub">SCANNED MONTHLY &middot; THEMATIC ETF LISTINGS / DELISTINGS, LAST 6 MONTHS</p>
   <div id="thematic-etf-table"><p class="section-sub" style="margin-top:8px;">Loading…</p></div>
 
   <div class="subtable-label" style="margin-top:28px;">▸ Dashboard Ticker Changes</div>
   <p class="section-sub">TICKERS TRACKED ON THIS DASHBOARD THAT WERE RENAMED OR DELISTED</p>
   <div id="ticker-changes-table"><p class="section-sub" style="margin-top:8px;">Loading…</p></div>
-</div>
+</details>
 
 <div id="chart-panel" class="chart-panel" style="display:none;">
   <div class="chart-panel-head">
@@ -267,6 +334,34 @@ function tickerUrl(ticker, linkType) {
 function boolDot(val, falseColor) {
   return dot(val ? 'green' : (falseColor || 'grey'));
 }
+function smallDot(colorWord) {
+  return `<span class="dot sm dot-${colorWord || 'grey'}"></span>`;
+}
+const DASH = '<span class="neutral">—</span>';
+// 1-99 percentile ranks: top quintile green, bottom quintile red.
+function fmtRank(v) {
+  if (v === null || v === undefined) return DASH;
+  const cls = v >= 80 ? 'up' : (v <= 20 ? 'down' : '');
+  return `<span class="${cls}">${v}</span>`;
+}
+function fmtRs(rank, chg) {
+  if (rank === null || rank === undefined) return DASH;
+  const d = chg ? `<span class="delta ${chg > 0 ? 'up' : 'down'}">${chg > 0 ? '▲' : '▼'}${Math.abs(chg)}</span>` : '';
+  return fmtRank(rank) + d;
+}
+// Extension from the 20 EMA in ATR units: 0-2 near support (buyable),
+// 2-3 stretched, >3 extended (chase risk), negative = below the 20 EMA.
+function fmtExt(v) {
+  if (v === null || v === undefined) return DASH;
+  const cls = v < 0 ? 'neutral' : (v <= 2 ? 'up' : (v <= 3 ? 'warn' : 'down'));
+  return `<span class="${cls}">${v > 0 ? '+' : ''}${v.toFixed(1)}</span>`;
+}
+function fmtHi52(pct, days) {
+  if (pct === null || pct === undefined) return DASH;
+  if (days === 0) return '<span class="badge">NEW HI</span>';
+  const near = pct >= -5;
+  return `<span class="${near ? 'accent' : 'neutral'}">${pct.toFixed(1)}%</span><span class="delta neutral">${days}d</span>`;
+}
 
 // ---------------------------------------------------------------------
 // Generic sortable table
@@ -307,7 +402,7 @@ function renderTable(tableId) {
   // instrument name happens to be -- otherwise each table auto-sizes its
   // own "Instrument" column independently and the dot/data columns drift
   // out of alignment from section to section.
-  const COLUMN_WIDTH = { text: 240, price: 90, pct: 80, bps: 90, sparkline: 90, dot: 130, bool: 150 };
+  const COLUMN_WIDTH = { text: 230, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 96, rank: 72 };
   let html = `<table id="${tableId}"><colgroup>`;
   columns.forEach(col => {
     html += `<col style="width:${COLUMN_WIDTH[col.type] || 90}px">`;
@@ -319,7 +414,8 @@ function renderTable(tableId) {
     const sortCls = col.sortable !== false ? 'sortable' : '';
     const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell' : '';
     const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
-    html += `<th class="${sortCls} ${alignCls}" ${onclick}>${col.label}${arrow}</th>`;
+    const title = col.title ? `title="${escapeAttr(col.title)}"` : '';
+    html += `<th class="${sortCls} ${alignCls}" ${onclick} ${title}>${col.label}${arrow}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -329,7 +425,7 @@ function renderTable(tableId) {
     html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}')"` : ''}>`;
     columns.forEach(col => {
       if (col.field === 'name') {
-        const url = tickerUrl(r.ticker, linkType);
+        const url = r.link || tickerUrl(r.ticker, linkType);
         html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.name}</a> <span class="neutral">(${r.ticker})</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
@@ -341,6 +437,14 @@ function renderTable(tableId) {
         html += `<td>${fmtPrice(r[col.field], col.decimals)}</td>`;
       } else if (col.type === 'bps') {
         html += `<td>${fmtBps(r[col.field])}</td>`;
+      } else if (col.type === 'rs') {
+        html += `<td>${fmtRs(r.rs_rank, r.rs_rank_chg)}</td>`;
+      } else if (col.type === 'ext') {
+        html += `<td>${fmtExt(r[col.field])}</td>`;
+      } else if (col.type === 'hi52') {
+        html += `<td>${fmtHi52(r.pct_from_52w_high, r.days_since_52w_high)}</td>`;
+      } else if (col.type === 'rank') {
+        html += `<td>${fmtRank(r[col.field])}</td>`;
       } else {
         html += `<td>${fmtPct(r[col.field])}</td>`;
       }
@@ -373,9 +477,10 @@ function toggleHoldings(rowId) {
   if (row) row.classList.toggle('open');
 }
 
-function makeTable(rows, columns, linkType) {
+function makeTable(rows, columns, linkType, initialSort) {
   const tableId = `tbl-${tableCounter++}`;
   tableRegistry[tableId] = { rows, columns, linkType: linkType || 'quote' };
+  if (initialSort) sortState[tableId] = initialSort;
   return `<div style="overflow-x:auto;">${renderTable(tableId)}</div>`;
 }
 
@@ -429,9 +534,29 @@ const trafficColumns = [
   { label: 'Daily Trend', field: 'trend', type: 'dot' },
   { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot' },
+  { label: 'Long-Term', field: 'long_trend', type: 'dot',
+    title: 'Green: price > 50-day SMA > 200-day SMA, and the 200-day is rising. Red: price below a falling 200-day. Otherwise yellow.' },
+  { label: 'RS Rank', field: 'rs_rank', type: 'rs',
+    title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
+  { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext',
+    title: 'Distance from the 20-day EMA in ATR(14) units. 0 to 2 (green) = near support; 2 to 3 (yellow) = stretched; above 3 (red) = extended / chase risk; negative = below the 20 EMA.' },
+  { label: '52W High', field: 'pct_from_52w_high', type: 'hi52',
+    title: '% below the 52-week closing high, and trading days since it. Amber = within 5% of the high.' },
   { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
   { label: '3M', field: 'sparkline_3m', type: 'sparkline', sortable: false },
 ];
+
+// Extra column for the cap-weighted sector table only: has the sector's
+// equal-weight twin (RSP*) out- or under-performed it over 3 months?
+const EW_CW_COLUMN = { label: 'EW vs CW 3M', field: 'ew_vs_cw_3m', type: 'pct',
+  title: '3-month change in the equal-weight / cap-weight ratio for this sector (e.g. RSPT vs XLK). Positive = the typical stock is keeping up with the mega-caps (broad participation); negative = a narrow, mega-cap-led move.' };
+
+function sectorAware(columns, key) {
+  if (key !== 'sectors') return columns;
+  const i = columns.findIndex(c => c.type === 'sparkline');
+  const at = i === -1 ? columns.length : i;
+  return [...columns.slice(0, at), EW_CW_COLUMN, ...columns.slice(at)];
+}
 
 // ---------------------------------------------------------------------
 // Section builders
@@ -439,7 +564,7 @@ const trafficColumns = [
 const MACRO_GROUPS = [
   // US Index Futures -- disabled for now, may reuse this section later.
   // ['us_index_futures', 'US Index Futures'],
-  ['global_indices', 'Global Market Indices'],
+  ['global_indices', 'US Market Index'],
   ['yields', 'US Treasury Yields'],
   ['energy', 'Oil and Gas'],
   ['vol_dollar', 'Volatility & Dollar'],
@@ -450,7 +575,6 @@ const EQUITIES_GROUPS = [
   ['major_etfs', 'Major ETF Stats'],
   ['sp500_submarket', 'S&P 500 Sub-Market — Style Factors'],
   ['sectors', 'S&P 500 Sectors'],
-  ['sectors_ew', 'S&P 500 Equal-Weight Sectors'],
   ['themes', 'Top Thematic ETFs'],
   ['countries_developed', 'Country ETFs — Developed'],
   ['countries_emerging', 'Country ETFs — Emerging'],
@@ -480,27 +604,10 @@ function buildPerformanceView(data) {
     if (rows.length === 0) return;
     equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, performanceColumns(false), 'holdings');
+    html += makeTable(rows, sectorAware(performanceColumns(false), key), 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
-
-  const breadth = data.breadth || {};
-  const cards = [
-    ['1D Breadth (% Positive)', breadth.pct_positive_1d != null ? breadth.pct_positive_1d.toFixed(1) + ' %' : '—'],
-    ['1W Breadth (% Positive)', breadth.pct_positive_1w != null ? breadth.pct_positive_1w.toFixed(1) + ' %' : '—'],
-    ['VIX Level', breadth.vix_level != null ? breadth.vix_level.toFixed(2) : '—'],
-    ['Sentiment', breadth.sentiment_label || '—'],
-    ['Tracked Instruments', breadth.tracked_instruments ?? '—'],
-  ];
-  html += `<div class="section">
-    <div class="section-head"><span class="section-num">03</span><h2 class="section-title">Market Breadth &amp; Sentiment</h2></div>
-    <p class="section-sub">DERIVED FROM TRACKED ETF/SECTOR UNIVERSE · NOT A FULL NYSE ADVANCE/DECLINE LINE</p>
-    <div class="breadth-cards">`;
-  cards.forEach(([label, value]) => {
-    html += `<div class="breadth-card"><div class="label">${label}</div><div class="value">${value}</div></div>`;
-  });
-  html += '</div></div>';
 
   return html;
 }
@@ -508,7 +615,7 @@ function buildPerformanceView(data) {
 function buildTrafficView(data) {
   let html = `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro</h2></div>
-    <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&gt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW</p>`;
+    <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&lt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW · HOVER COLUMN HEADERS FOR DEFINITIONS</p>`;
   let macroShown = 0;
   MACRO_GROUPS.forEach(([key, label]) => {
     const rows = filterRows((data.macro || {})[key] || []);
@@ -529,7 +636,7 @@ function buildTrafficView(data) {
     if (rows.length === 0) return;
     equitiesShown++;
     html += `<div class="subtable-label">▸ ${label}</div>`;
-    html += makeTable(rows, trafficColumns, 'holdings');
+    html += makeTable(rows, sectorAware(trafficColumns, key), 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
@@ -623,11 +730,266 @@ function setMiniChartsRange(range) {
   renderApp(); // re-render; fetchHistory() is cached so this is instant
 }
 
+// ---------------------------------------------------------------------
+// Market regime banner + "what changed" feed (shown above every view)
+// ---------------------------------------------------------------------
+function sectionLabel(key) {
+  const all = [
+    ...MACRO_GROUPS.map(([k, l]) => ['macro.' + k, l]),
+    ...EQUITIES_GROUPS.map(([k, l]) => ['equities.' + k, l]),
+  ];
+  const hit = all.find(([k]) => k === key);
+  return hit ? hit[1] : key;
+}
+
+function fmtShortDate(iso) {
+  if (!iso) return '';
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function buildRegimeBanner(data) {
+  const r = data.regime;
+  if (!r || !r.label) return '';
+  const cls = r.label === 'Risk-On' ? 'on' : (r.label === 'Risk-Off' ? 'off' : 'neutral');
+  const colorCls = cls === 'on' ? 'up' : (cls === 'off' ? 'down' : 'warn');
+  let prev = '';
+  if (r.prev_score !== null && r.prev_score !== undefined && r.prev_score !== r.score) {
+    const was = r.prev_label && r.prev_label !== r.label ? ` · was ${r.prev_label}` : '';
+    prev = `<span class="regime-score">prev ${r.prev_score}/${r.max}${was}</span>`;
+  }
+  const chips = (r.checks || []).map(c => {
+    const st = c.pass === true ? 'pass' : (c.pass === false ? 'fail' : '');
+    const mark = c.pass === true ? '✓' : (c.pass === false ? '✗' : '?');
+    const detail = c.detail ? `<span class="chip-detail">${c.detail}</span>` : '';
+    return `<span class="regime-chip ${st}" title="${escapeAttr(c.why || '')}">${mark} ${c.label}${detail}</span>`;
+  }).join('');
+  return `<div class="regime ${cls}">
+    <div class="regime-main">
+      <span class="regime-kicker">Regime</span>
+      <span class="regime-label ${colorCls}">${r.label}</span>
+      <span class="regime-score">${r.score}/${r.max}</span>${prev}
+    </div>
+    <div class="regime-checks">${chips}</div>
+  </div>`;
+}
+
+function buildChangesPanel(data) {
+  const sc = data.signal_changes;
+  if (!sc || !sc.changes) return '';
+  // Weekly flips matter most, then the long-term trend, then daily noise;
+  // within each, strongest RS first.
+  const order = { Weekly: 0, 'Long-term': 1, Daily: 2 };
+  const sorted = [...sc.changes].sort((a, b) =>
+    (order[a.signal] - order[b.signal]) || ((b.rs_rank ?? -1) - (a.rs_rank ?? -1)));
+  const ups = sorted.filter(c => c.direction === 'up');
+  const downs = sorted.filter(c => c.direction === 'down');
+  const item = c => {
+    const linkType = c.section.startsWith('equities') ? 'holdings' : 'quote';
+    const rs = c.rs_rank !== null && c.rs_rank !== undefined ? `<span class="delta neutral">RS ${fmtRank(c.rs_rank)}</span>` : '';
+    return `<div class="change-item" title="${escapeAttr(sectionLabel(c.section))}">
+      <span class="sig">${c.signal}</span>
+      <span class="dots">${smallDot(c.from)}→${smallDot(c.to)}</span>
+      <a class="ticker-link" href="${tickerUrl(c.ticker, linkType)}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(c.ticker)}" data-name="${escapeAttr(c.name)}">${c.ticker}</a>
+      <span class="nm">${c.name}</span>${rs}
+    </div>`;
+  };
+  const col = (title, list) => `<div class="changes-col"><h4>${title} (${list.length})</h4>${
+    list.length ? list.map(item).join('') : '<div class="change-item neutral">None</div>'}</div>`;
+  const summary = `▸ What changed · ${fmtShortDate(sc.prev_as_of)} → ${fmtShortDate(sc.as_of)} · ` +
+    `<span class="up">${ups.length} up</span> / <span class="down">${downs.length} down</span>`;
+  return `<details class="changes" open><summary>${summary}</summary>
+    <div class="changes-body">${col('Turned up', ups)}${col('Turned down', downs)}</div></details>`;
+}
+
+function renderTopPanels() {
+  if (!DATA) return;
+  document.getElementById('regime-banner').innerHTML = buildRegimeBanner(DATA);
+  document.getElementById('changes-panel').innerHTML = buildChangesPanel(DATA);
+}
+
+// ---------------------------------------------------------------------
+// Rotation view -- Relative Rotation Graph vs SPY (weekly)
+// ---------------------------------------------------------------------
+let rrgGroup = 'sectors';
+let rrgTails = null; // null = automatic (on for sectors, off for the busier groups)
+const RRG_GROUPS = [['sectors', 'Sectors'], ['themes', 'Themes'], ['countries', 'Countries']];
+const QUADS = {
+  leading:   { label: 'Leading',   color: 'var(--up)',        note: 'outperforming, still accelerating' },
+  weakening: { label: 'Weakening', color: 'var(--dot-yellow)', note: 'outperforming, losing steam' },
+  lagging:   { label: 'Lagging',   color: 'var(--down)',      note: 'underperforming, still falling' },
+  improving: { label: 'Improving', color: 'var(--improving)', note: 'underperforming, turning up' },
+};
+function quadrantOf(p) {
+  return p[0] >= 100 ? (p[1] >= 100 ? 'leading' : 'weakening') : (p[1] >= 100 ? 'improving' : 'lagging');
+}
+function headingArrow(points) {
+  if (points.length < 2) return '';
+  const [x1, y1] = points[points.length - 2], [x2, y2] = points[points.length - 1];
+  return (y2 >= y1 ? (x2 >= x1 ? '↗' : '↖') : (x2 >= x1 ? '↘' : '↙'));
+}
+function setRrgGroup(g) { rrgGroup = g; rrgTails = null; renderApp(); }
+function toggleRrgTails() { rrgTails = !(rrgTails === null ? rrgGroup === 'sectors' : rrgTails); renderApp(); }
+
+function buildRrgSvg(items, tails) {
+  const W = 1000, H = 600, P = 34;
+  const shown = items.map(it => ({ ...it, pts: tails ? it.points : it.points.slice(-1) }));
+  let dx = 1.5, dy = 1.5;
+  shown.forEach(it => it.pts.forEach(([x, y]) => {
+    dx = Math.max(dx, Math.abs(x - 100)); dy = Math.max(dy, Math.abs(y - 100));
+  }));
+  dx *= 1.12; dy *= 1.12;
+  const X = v => P + ((v - (100 - dx)) / (2 * dx)) * (W - 2 * P);
+  const Y = v => H - P - ((v - (100 - dy)) / (2 * dy)) * (H - 2 * P);
+  const cx = X(100), cy = Y(100);
+  const q = (x, y, w, h, key) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${QUADS[key].color}" fill-opacity="0.06"/>`;
+  let svg = `<svg class="rrg-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += q(cx, P, W - P - cx, cy - P, 'leading') + q(cx, cy, W - P - cx, H - P - cy, 'weakening') +
+         q(P, cy, cx - P, H - P - cy, 'lagging') + q(P, P, cx - P, cy - P, 'improving');
+  svg += `<line x1="${P}" x2="${W - P}" y1="${cy}" y2="${cy}" stroke="var(--border)"/>
+          <line x1="${cx}" x2="${cx}" y1="${P}" y2="${H - P}" stroke="var(--border)"/>`;
+  const corner = (key, x, y, anchor) =>
+    `<text x="${x}" y="${y}" font-size="13" font-weight="700" fill="${QUADS[key].color}" text-anchor="${anchor}" opacity="0.85">${QUADS[key].label.toUpperCase()}</text>`;
+  svg += corner('improving', P + 8, P + 18, 'start') + corner('leading', W - P - 8, P + 18, 'end') +
+         corner('lagging', P + 8, H - P - 10, 'start') + corner('weakening', W - P - 8, H - P - 10, 'end');
+  svg += `<text x="${W - P}" y="${cy - 6}" font-size="10" fill="var(--muted)" text-anchor="end">RS-RATIO →</text>
+          <text x="${cx + 6}" y="${P + 10}" font-size="10" fill="var(--muted)">↑ RS-MOMENTUM</text>
+          <text x="${P}" y="${H - P + 16}" font-size="9" fill="var(--muted)">${(100 - dx).toFixed(1)}</text>
+          <text x="${W - P}" y="${H - P + 16}" font-size="9" fill="var(--muted)" text-anchor="end">${(100 + dx).toFixed(1)}</text>`;
+  shown.forEach(it => {
+    const head = it.pts[it.pts.length - 1];
+    const color = QUADS[quadrantOf(head)].color;
+    if (it.pts.length > 1) {
+      svg += `<polyline points="${it.pts.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="1.3" stroke-opacity="0.55"/>`;
+      it.pts.slice(0, -1).forEach(([x, y]) => {
+        svg += `<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="2" fill="${color}" fill-opacity="0.5"/>`;
+      });
+    }
+    const hx = X(head[0]).toFixed(1), hy = Y(head[1]).toFixed(1);
+    svg += `<circle cx="${hx}" cy="${hy}" r="5" fill="${color}"><title>${it.ticker} ${it.name} — RS-Ratio ${head[0].toFixed(2)}, RS-Momentum ${head[1].toFixed(2)}</title></circle>`;
+    svg += `<text class="ticker-link" data-ticker="${escapeAttr(it.ticker)}" data-name="${escapeAttr(it.name)}" x="${(+hx + 7).toFixed(1)}" y="${(+hy + 3.5).toFixed(1)}" font-size="10.5" fill="var(--text)">${it.ticker}</text>`;
+  });
+  return svg + '</svg>';
+}
+
+function buildRotationView(data) {
+  const rrg = data.rrg || {};
+  const items = ((rrg.groups || {})[rrgGroup] || []).filter(it => it.points && it.points.length);
+  const tails = rrgTails === null ? rrgGroup === 'sectors' : rrgTails;
+  const groupBtns = RRG_GROUPS.map(([k, l]) =>
+    `<button class="${rrgGroup === k ? 'active' : ''}" onclick="setRrgGroup('${k}')">${l}</button>`).join('');
+  let html = `<div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Relative Rotation</h2></div>
+    <p class="section-sub">WEEKLY · VS SPY · ${rrg.window || 10}-WEEK WINDOW · TAILS = LAST 6 WEEKS · ROTATION IS USUALLY CLOCKWISE: IMPROVING → LEADING → WEAKENING → LAGGING · FILTERS DON'T APPLY HERE</p>
+    <div class="toolbar-row" style="margin-bottom:10px;">
+      <span class="toolbar-label">Group</span>${groupBtns}
+      <button class="${tails ? 'active' : ''}" onclick="toggleRrgTails()">Tails ${tails ? 'On' : 'Off'}</button>
+    </div>`;
+  if (!items.length) {
+    return html + '<p class="section-sub">No rotation data yet — it appears after the next data refresh.</p></div>';
+  }
+  html += buildRrgSvg(items, tails);
+
+  const byQuad = { improving: [], leading: [], weakening: [], lagging: [] };
+  items.forEach(it => {
+    const head = it.points[it.points.length - 1];
+    byQuad[quadrantOf(head)].push({ ...it, dist: Math.hypot(head[0] - 100, head[1] - 100) });
+  });
+  html += '<div class="quad-grid">';
+  ['improving', 'leading', 'weakening', 'lagging'].forEach(k => {
+    const list = byQuad[k].sort((a, b) => b.dist - a.dist);
+    html += `<div class="quad" style="border-top-color:${QUADS[k].color}">
+      <h4 style="color:${QUADS[k].color}">${QUADS[k].label} (${list.length})</h4>
+      <div class="section-sub" style="margin-bottom:4px;">${QUADS[k].note}</div>
+      ${list.length ? list.map(it => `<div class="quad-item">
+        <a class="ticker-link" href="${tickerUrl(it.ticker, 'holdings')}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(it.ticker)}" data-name="${escapeAttr(it.name)}">${it.ticker}</a>
+        <span class="nm">${it.name}</span><span class="hd" title="Direction of the latest weekly move">${headingArrow(it.points)}</span>
+      </div>`).join('') : '<div class="quad-item neutral">—</div>'}
+    </div>`;
+  });
+  html += '</div><p class="section-sub" style="margin-top:10px;">An open approximation of JdK Relative Rotation Graphs (the original formula is proprietary): RS = price ÷ SPY; RS-Ratio = 100 + z-score of RS; RS-Momentum = 100 + z-score of RS-Ratio. Arrow = direction of the latest weekly move.</p></div>';
+  return html;
+}
+
+// ---------------------------------------------------------------------
+// Academic Momentum view -- Jegadeesh-Titman style 12-1 / 6-1 momentum
+// ---------------------------------------------------------------------
+function academicColumns(withRank) {
+  const cols = [
+    { label: 'Instrument', field: 'name', type: 'text', sortable: false },
+    { label: 'Price', field: 'price', type: 'price' },
+    { label: '1M %', field: 'chg_1m_pct', type: 'pct', title: 'The most recent month: the one academic momentum skips, because it tends to reverse.' },
+    { label: '6M %', field: 'chg_6m_pct', type: 'pct' },
+    { label: '12M %', field: 'chg_1y_pct', type: 'pct' },
+    { label: '6-1M %', field: 'mom_6_1_pct', type: 'pct', title: 'Return from 6 months ago to 1 month ago.' },
+    { label: '12-1M %', field: 'mom_12_1_pct', type: 'pct', title: 'Return from 12 months ago to 1 month ago: the classic academic momentum signal (Jegadeesh & Titman, 1993).' },
+  ];
+  if (withRank) cols.push({ label: '12-1 Rank', field: 'mom_12_1_rank', type: 'rank', title: '12-1M momentum as a 1-99 percentile across all equity ETFs on this dashboard.' });
+  return cols;
+}
+
+function buildAcademicView(data) {
+  // Winners / losers deciles across the whole (unfiltered) equity universe.
+  const seen = new Set();
+  const universe = [];
+  EQUITIES_GROUPS.forEach(([key]) => ((data.equities || {})[key] || []).forEach(r => {
+    if (!seen.has(r.ticker) && r.mom_12_1_pct !== null && r.mom_12_1_pct !== undefined) {
+      seen.add(r.ticker); universe.push(r);
+    }
+  }));
+  universe.sort((a, b) => b.mom_12_1_pct - a.mom_12_1_pct);
+  const n = Math.max(1, Math.round(universe.length / 10));
+  const decileCols = [
+    { label: 'Instrument', field: 'name', type: 'text', sortable: false },
+    { label: '12-1M %', field: 'mom_12_1_pct', type: 'pct' },
+    { label: '12-1 Rank', field: 'mom_12_1_rank', type: 'rank' },
+    { label: 'Weekly Trend', field: 'weekly_trend', type: 'dot' },
+  ];
+  let html = `<div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Winners &amp; Losers</h2></div>
+    <p class="section-sub">TOP / BOTTOM DECILE BY 12-1M MOMENTUM · ALL ${universe.length} EQUITY ETFS · FILTERS DON'T APPLY HERE</p>
+    <div class="decile-grid">
+      <div><div class="subtable-label">▸ Winners (top ${n})</div>${makeTable(universe.slice(0, n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'desc' })}</div>
+      <div><div class="subtable-label">▸ Losers (bottom ${n})</div>${makeTable(universe.slice(-n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'asc' })}</div>
+    </div></div>`;
+
+  html += `<div class="section">
+    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Macro</h2></div>
+    <p class="section-sub">TIME-SERIES MOMENTUM: IS EACH ASSET ABOVE WHERE IT WAS 12 MONTHS AGO (SKIPPING THE LAST MONTH)? · YIELDS EXCLUDED</p>`;
+  let macroShown = 0;
+  MACRO_GROUPS.forEach(([key, label]) => {
+    if (key === 'yields') return;
+    const rows = filterRows((data.macro || {})[key] || []);
+    if (!rows.length) return;
+    macroShown++;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, academicColumns(false), 'quote', { field: 'mom_12_1_pct', direction: 'desc' });
+  });
+  if (macroShown === 0) html += emptyFilterMessage();
+  html += '</div>';
+
+  html += `<div class="section">
+    <div class="section-head"><span class="section-num">03</span><h2 class="section-title">Equities</h2></div>
+    <p class="section-sub">CROSS-SECTIONAL MOMENTUM · SORTED BY 12-1M · CLICK ANY COLUMN HEADER TO RE-SORT</p>`;
+  let eqShown = 0;
+  EQUITIES_GROUPS.forEach(([key, label]) => {
+    const rows = filterRows((data.equities || {})[key] || []);
+    if (!rows.length) return;
+    eqShown++;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, academicColumns(true), 'holdings', { field: 'mom_12_1_pct', direction: 'desc' });
+  });
+  if (eqShown === 0) html += emptyFilterMessage();
+  html += '</div>';
+  return html;
+}
+
+const VIEWS = ['performance', 'traffic', 'minicharts', 'rotation', 'academic'];
 function setView(view) {
   currentView = view;
-  document.getElementById('view-btn-performance').classList.toggle('active', view === 'performance');
-  document.getElementById('view-btn-traffic').classList.toggle('active', view === 'traffic');
-  document.getElementById('view-btn-minicharts').classList.toggle('active', view === 'minicharts');
+  VIEWS.forEach(v => {
+    const el = document.getElementById('view-btn-' + v);
+    if (el) el.classList.toggle('active', v === view);
+  });
   renderApp();
 }
 
@@ -644,6 +1006,10 @@ function renderApp() {
   } else if (currentView === 'minicharts') {
     appEl.innerHTML = buildMiniChartsView(DATA);
     loadMiniCharts();
+  } else if (currentView === 'rotation') {
+    appEl.innerHTML = buildRotationView(DATA);
+  } else if (currentView === 'academic') {
+    appEl.innerHTML = buildAcademicView(DATA);
   } else {
     appEl.innerHTML = buildTrafficView(DATA);
   }
@@ -938,6 +1304,7 @@ async function loadData() {
       updatedEl.textContent = 'No data yet — run the GitHub Action once';
     }
 
+    renderTopPanels();
     renderApp();
     statusEl.style.display = 'none';
     appEl.style.display = 'block';
