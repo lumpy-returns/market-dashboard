@@ -1,10 +1,4 @@
 {
-  "checked_utc": "2026-10-02T22:07:08.842661+00:00",
-  "failed": [
-    {
-      "ticker": "IWM",
-      "name": "IWM (Russell 2000)",
-      "section": "equities.major_etfs"
-    }
-  ]
+  "checked_utc": "2026-10-05T01:54:55.419611+00:00",
+  "failed": []
 }
