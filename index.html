@@ -8,7 +8,7 @@
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #000000;
@@ -32,8 +32,9 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "JetBrains Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "Manrope", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
     font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
     padding: 24px;
     max-width: 1200px;
     margin: 0 auto;
@@ -163,7 +164,7 @@
     background: var(--panel);
     border: 1px solid var(--accent);
     box-shadow: 0 0 24px rgba(255,159,10,0.12), 0 12px 32px rgba(0,0,0,0.6);
-    font-family: "JetBrains Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "Manrope", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   }
   .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
   .chart-panel-title { font-weight: 700; font-size: 12.5px; }
@@ -457,7 +458,7 @@ function renderTable(tableId) {
           html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.name}</a></td>`;
           return;
         }
-        html += `<td><span class="tk-slot" style="min-width:${tickerCh}ch"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' <span class="hold-mark">▸</span>' : ''}</td>`;
+        html += `<td><span class="tk-slot"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' <span class="hold-mark">▸</span>' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field], col.sparkW, col.sparkH)}</td>`;
       } else if (col.type === 'dot') {
@@ -496,6 +497,19 @@ function renderTable(tableId) {
   return html;
 }
 
+// Names line up at the same x even in a proportional font: after each render,
+// give every ticker slot in a table the width of that table's widest ticker.
+function alignTickerSlots() {
+  document.querySelectorAll('table').forEach(t => {
+    const slots = [...t.querySelectorAll('.tk-slot')];
+    if (!slots.length) return;
+    slots.forEach(el => { el.style.width = ''; });
+    const w = Math.max(...slots.map(el => el.getBoundingClientRect().width));
+    slots.forEach(el => { el.style.width = Math.ceil(w) + 14 + 'px'; });
+  });
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(alignTickerSlots);
+
 function handleSort(tableId, field) {
   const current = sortState[tableId] || { field: null, direction: 'desc' };
   if (current.field === field) {
@@ -505,6 +519,7 @@ function handleSort(tableId, field) {
   }
   const el = document.getElementById(tableId);
   el.outerHTML = renderTable(tableId);
+  alignTickerSlots();
 }
 
 function toggleHoldings(rowId, ev) {
@@ -1088,6 +1103,12 @@ function renderApp() {
   //   appEl.innerHTML = buildAcademicView(DATA);
   } else {
     appEl.innerHTML = buildTrafficView(DATA);
+  }
+  alignTickerSlots();
+  // Re-measure once the web font has actually loaded (widths change with the face).
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load('400 13px Manrope'), document.fonts.load('700 13px Manrope')])
+      .then(alignTickerSlots).catch(() => {});
   }
 }
 
