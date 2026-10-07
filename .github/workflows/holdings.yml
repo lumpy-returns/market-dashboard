@@ -2,8 +2,8 @@ name: Refresh ETF Holdings
 
 on:
   schedule:
-    # Quarterly: 14:00 UTC on the 5th of Jan / Apr / Jul / Oct (after funds' quarter-end rebalances settle).
-    - cron: '0 14 5 1,4,7,10 *'
+    # Monthly: 14:00 UTC on the 2nd of each month (start of month, after month-end rebalances settle).
+    - cron: '0 14 2 * *'
   workflow_dispatch: {}   # run it manually from the Actions tab any time
 
 permissions:
@@ -33,6 +33,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/holdings.json
-          git diff --staged --quiet || git commit -m "Quarterly ETF holdings refresh"
+          git diff --staged --quiet || git commit -m "Monthly ETF holdings refresh"
           git pull --rebase -q
           git push

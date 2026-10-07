@@ -1,6 +1,6 @@
-"""Quarterly pull of each equity ETF's top-10 holdings -> data/holdings.json.
+"""Monthly pull of each equity ETF's top-10 holdings -> data/holdings.json.
 
-Run by .github/workflows/holdings.yml (Jan/Apr/Jul/Oct) or manually. Holdings
+Run by .github/workflows/holdings.yml (2nd of each month) or manually. Holdings
 move slowly, so this is deliberately separate from the daily price job.
 
 Source: Yahoo Finance via yfinance (Ticker.funds_data.top_holdings). If a fund
