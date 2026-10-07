@@ -239,6 +239,7 @@
     <span class="toolbar-label">Views</span>
     <button id="view-btn-performance" onclick="setView('performance')">Performance</button>
     <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
+    <button id="view-btn-sparklines" onclick="setView('sparklines')">Sparklines</button>
     <button id="view-btn-minicharts" onclick="setView('minicharts')">Mini Charts</button>
     <button id="view-btn-rotation" onclick="setView('rotation')">Rotation</button>
     <!-- Academic Momentum tab hidden. To bring it back: uncomment this button, the JS block
@@ -317,9 +318,9 @@ function fmtPrice(val, decimals) {
   if (val === null || val === undefined) return '—';
   return val.toLocaleString(undefined, { minimumFractionDigits: decimals ?? 2, maximumFractionDigits: decimals ?? 2 });
 }
-function sparklineSvg(values) {
+function sparklineSvg(values, w = 60, h = 20) {
   if (!values || values.length < 2) return '';
-  const w = 60, h = 20, pad = 2;
+  const pad = 2;
   const min = Math.min(...values), max = Math.max(...values);
   const range = (max - min) || 1;
   const pts = values.map((v, i) => {
@@ -420,7 +421,7 @@ function renderTable(tableId) {
   const COLUMN_WIDTH = { text: 260, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 96, rank: 72 };
   let html = `<table id="${tableId}"><colgroup>`;
   columns.forEach(col => {
-    html += `<col style="width:${COLUMN_WIDTH[col.type] || 90}px">`;
+    html += `<col style="width:${col.width || COLUMN_WIDTH[col.type] || 90}px">`;
   });
   html += '</colgroup><thead><tr>';
   columns.forEach(col => {
@@ -443,9 +444,14 @@ function renderTable(tableId) {
     columns.forEach(col => {
       if (col.field === 'name') {
         const url = r.link || tickerUrl(r.ticker, linkType);
+        if (linkType === 'quote') {
+          // Macro rows: tickers (^TNX, CL=F ...) add noise, so show the name only.
+          html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.name}</a></td>`;
+          return;
+        }
         html += `<td><span class="tk-slot" style="min-width:${tickerCh}ch"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
-        html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
+        html += `<td class="center-cell">${sparklineSvg(r[col.field], col.sparkW, col.sparkH)}</td>`;
       } else if (col.type === 'dot') {
         html += `<td class="center-cell">${dot(r[col.field])}</td>`;
       } else if (col.type === 'bool') {
@@ -556,8 +562,13 @@ const trafficColumns = [
     title: 'Distance from the 20-day EMA in ATR(14) units. 0 to 2 (green) = near support; 2 to 3 (yellow) = stretched; above 3 (red) = extended / chase risk; negative = below the 20 EMA.' },
   { label: '52W High', field: 'pct_from_52w_high', type: 'hi52',
     title: '% below the 52-week closing high, and trading days since it. Amber = within 5% of the high.' },
-  { label: '20D', field: 'sparkline_20d', type: 'sparkline', sortable: false },
-  { label: '3M', field: 'sparkline_3m', type: 'sparkline', sortable: false },
+];
+
+// Sparklines tab: one trend line per horizon, wider than the old inline ones.
+const sparklineColumns = [
+  { label: 'Instrument', field: 'name', type: 'text', sortable: false },
+  ...[['10D', '10d'], ['20D', '20d'], ['3M', '3m'], ['6M', '6m'], ['12M', '12m']].map(([label, k]) =>
+    ({ label, field: 'sparkline_' + k, type: 'sparkline', sortable: false, width: 120, sparkW: 96, sparkH: 26 })),
 ];
 
 // Extra column for the cap-weighted sector table only: has the sector's
@@ -623,6 +634,36 @@ function buildPerformanceView(data) {
   if (equitiesShown === 0) html += emptyFilterMessage();
   html += '</div>';
 
+  return html;
+}
+
+function buildSparklinesView(data) {
+  let html = `<div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro</h2></div>
+    <p class="section-sub">CLOSING-PRICE TREND LINES · 10D / 20D / 3M / 6M / 12M · GREEN = UP OVER THE WINDOW, RED = DOWN · EACH LINE IS SCALED TO ITS OWN RANGE</p>`;
+  let macroShown = 0;
+  MACRO_GROUPS.forEach(([key, label]) => {
+    const rows = filterRows((data.macro || {})[key] || []);
+    if (rows.length === 0) return;
+    macroShown++;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, sparklineColumns, 'quote');
+  });
+  if (macroShown === 0) html += emptyFilterMessage();
+  html += '</div>';
+
+  html += `<div class="section">
+    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Equities</h2></div>`;
+  let equitiesShown = 0;
+  EQUITIES_GROUPS.forEach(([key, label]) => {
+    const rows = filterRows((data.equities || {})[key] || []);
+    if (rows.length === 0) return;
+    equitiesShown++;
+    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += makeTable(rows, sparklineColumns, 'holdings');
+  });
+  if (equitiesShown === 0) html += emptyFilterMessage();
+  html += '</div>';
   return html;
 }
 
@@ -1000,7 +1041,7 @@ function buildAcademicView(data) {
 
 */
 
-const VIEWS = ['performance', 'traffic', 'minicharts', 'rotation'];  // add 'academic' to restore that tab
+const VIEWS = ['performance', 'traffic', 'sparklines', 'minicharts', 'rotation'];  // add 'academic' to restore that tab
 function setView(view) {
   currentView = view;
   VIEWS.forEach(v => {
@@ -1020,6 +1061,8 @@ function renderApp() {
   const appEl = document.getElementById('app');
   if (currentView === 'performance') {
     appEl.innerHTML = buildPerformanceView(DATA);
+  } else if (currentView === 'sparklines') {
+    appEl.innerHTML = buildSparklinesView(DATA);
   } else if (currentView === 'minicharts') {
     appEl.innerHTML = buildMiniChartsView(DATA);
     loadMiniCharts();

@@ -422,6 +422,10 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
     days_since_52w_high = int(len(window_52w) - 1 - int(window_52w.values.argmax()))
     sparkline_20d = [round(v, 2) for v in closes.iloc[-20:].tolist()]
     sparkline_3m = [round(v, 2) for v in closes.iloc[-63:].tolist()]
+    sparkline_10d = [round(v, 2) for v in closes.iloc[-10:].tolist()]
+    sparkline_6m = [round(v, 2) for v in closes.iloc[-126:].tolist()]
+    # 12M: every other close (ending on the latest) -- plenty for a ~90px line
+    sparkline_12m = [round(v, 2) for v in closes.iloc[-252:][::-1][::2][::-1].tolist()]
 
     # --- EMA-based trend signal ---
     ema10 = closes.ewm(span=10, adjust=False).mean().iloc[-1]
@@ -537,6 +541,9 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
         "days_since_52w_high": days_since_52w_high,
         "sparkline_20d": sparkline_20d,
         "sparkline_3m": sparkline_3m,
+        "sparkline_10d": sparkline_10d,
+        "sparkline_6m": sparkline_6m,
+        "sparkline_12m": sparkline_12m,
         "trend": trend,
         "weekly_trend": weekly_trend,
         "long_trend": long_trend,
