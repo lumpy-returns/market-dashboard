@@ -126,6 +126,13 @@
   .neutral { color: var(--muted); }
   .holdings-row { display: none; }
   .holdings-row.open { display: table-row; }
+  .hold-head { color: var(--accent); font-size: 10px; text-transform: uppercase; margin-bottom: 4px; }
+  .hold-grid { max-width: 760px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 28px; }
+  .hold-item { display: grid; grid-template-columns: 18px 70px minmax(0, 1fr) 48px; gap: 6px; align-items: baseline; }
+  .hold-rank { color: var(--muted); text-align: right; }
+  .hold-sym { color: var(--text); font-weight: 600; }
+  .hold-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hold-w { text-align: right; color: var(--accent); }
   .holdings-row td { background: var(--panel-hover); text-align: left; color: var(--muted); font-size: 11.5px; padding: 6px 10px; }
   .chip { display: inline-block; border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; margin-right: 6px; color: var(--text); }
 
@@ -440,7 +447,7 @@ function renderTable(tableId) {
   sortedRows.forEach(r => {
     const hasHoldings = r.top_holdings && r.top_holdings.length > 0;
     const rowId = `hold-${tableCounter++}`;
-    html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}')"` : ''}>`;
+    html += `<tr class="${hasHoldings ? 'has-holdings' : ''}" ${hasHoldings ? `onclick="toggleHoldings('${rowId}', event)"` : ''}>`;
     columns.forEach(col => {
       if (col.field === 'name') {
         const url = r.link || tickerUrl(r.ticker, linkType);
@@ -449,7 +456,7 @@ function renderTable(tableId) {
           html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.name}</a></td>`;
           return;
         }
-        html += `<td><span class="tk-slot" style="min-width:${tickerCh}ch"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' ▸' : ''}</td>`;
+        html += `<td><span class="tk-slot" style="min-width:${tickerCh}ch"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' <span class="hold-mark">▸</span>' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field], col.sparkW, col.sparkH)}</td>`;
       } else if (col.type === 'dot') {
@@ -474,8 +481,12 @@ function renderTable(tableId) {
     });
     html += '</tr>';
     if (hasHoldings) {
+      const asOf = DATA && DATA.holdings_updated ? fmtShortDate(DATA.holdings_updated.slice(0, 10)) : '';
       html += `<tr class="holdings-row" id="${rowId}"><td colspan="${columns.length}">
-        Top holdings: ${r.top_holdings.map(h => `<span class="chip">${h}</span>`).join('')}
+        <div class="hold-head">Top ${r.top_holdings.length} holdings${asOf ? ` · pulled ${asOf} · refreshed quarterly` : ''}</div>
+        <div class="hold-grid">${r.top_holdings.map((h, i) => `
+          <div class="hold-item"><span class="hold-rank">${i + 1}</span><span class="hold-sym">${escapeAttr(h.s)}</span><span class="hold-name">${escapeAttr(h.n)}</span><span class="hold-w">${h.w === null || h.w === undefined ? '' : h.w.toFixed(1) + '%'}</span></div>`).join('')}
+        </div>
       </td></tr>`;
     }
   });
@@ -495,9 +506,13 @@ function handleSort(tableId, field) {
   el.outerHTML = renderTable(tableId);
 }
 
-function toggleHoldings(rowId) {
+function toggleHoldings(rowId, ev) {
+  if (ev && ev.target && ev.target.closest('a')) return;   // ticker link still opens Yahoo
   const row = document.getElementById(rowId);
-  if (row) row.classList.toggle('open');
+  if (!row) return;
+  row.classList.toggle('open');
+  const mark = row.previousElementSibling && row.previousElementSibling.querySelector('.hold-mark');
+  if (mark) mark.textContent = row.classList.contains('open') ? '▾' : '▸';
 }
 
 function makeTable(rows, columns, linkType, initialSort) {
@@ -1341,6 +1356,20 @@ function loadMarketChanges() {
 // ---------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------
+// Top-10 holdings come from data/holdings.json (refreshed quarterly by its own
+// workflow); merged onto the equity rows so a click on a row can expand them.
+async function attachHoldings(data) {
+  try {
+    const res = await fetch(`data/holdings.json?t=${Date.now()}`);
+    if (!res.ok) return;
+    const h = await res.json();
+    data.holdings_updated = h.updated_utc;
+    Object.values(data.equities || {}).forEach(rows => rows.forEach(r => {
+      if (h.holdings && h.holdings[r.ticker]) r.top_holdings = h.holdings[r.ticker];
+    }));
+  } catch (e) { /* holdings are optional */ }
+}
+
 async function loadData() {
   const statusEl = document.getElementById('status');
   const appEl = document.getElementById('app');
@@ -1351,6 +1380,7 @@ async function loadData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     DATA = data;
+    await attachHoldings(data);
 
     if (data.last_updated_utc) {
       const updated = new Date(data.last_updated_utc);

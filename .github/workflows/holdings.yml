@@ -1,0 +1,38 @@
+name: Refresh ETF Holdings
+
+on:
+  schedule:
+    # Quarterly: 14:00 UTC on the 5th of Jan / Apr / Jul / Oct (after funds' quarter-end rebalances settle).
+    - cron: '0 14 5 1,4,7,10 *'
+  workflow_dispatch: {}   # run it manually from the Actions tab any time
+
+permissions:
+  contents: write
+
+jobs:
+  holdings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance
+
+      - name: Pull top-10 holdings
+        run: python fetch_holdings.py
+
+      - name: Commit updated holdings
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/holdings.json
+          git diff --staged --quiet || git commit -m "Quarterly ETF holdings refresh"
+          git pull --rebase -q
+          git push

@@ -190,43 +190,6 @@ EQUITIES = {
     ],
 }
 
-# Static top-holdings reference, shown as an expandable detail on rows.
-# These drift slowly over time -- update occasionally, no need for daily accuracy.
-TOP_HOLDINGS = {
-    "XLK": ["AAPL", "MSFT", "NVDA"],
-    "XLF": ["BRK.B", "JPM", "V"],
-    "XLV": ["LLY", "UNH", "JNJ"],
-    "XLY": ["AMZN", "TSLA", "HD"],
-    "XLP": ["PG", "COST", "WMT"],
-    "XLE": ["XOM", "CVX", "COP"],
-    "XLI": ["GE", "CAT", "RTX"],
-    "XLB": ["LIN", "SHW", "FCX"],
-    "XLRE": ["PLD", "AMT", "EQIX"],
-    "XLU": ["NEE", "SO", "DUK"],
-    "XLC": ["META", "GOOGL", "NFLX"],
-    "SMH": ["NVDA", "TSM", "AVGO"],
-    "SOXX": ["NVDA", "AVGO", "AMD"],
-    "ARKK": ["TSLA", "ROKU", "COIN"],
-    "ICLN": ["FSLR", "ENPH", "VWS.CO"],
-    "HACK": ["PANW", "CRWD", "FTNT"],
-    "FINX": ["SQ", "SOFI", "AFRM"],
-    "IBB": ["AMGN", "GILD", "VRTX"],
-    "JETS": ["DAL", "UAL", "LUV"],
-    "SKYY": ["AMZN", "MSFT", "GOOGL"],
-    "ROBO": ["ISRG", "KEYENCE", "FANUC"],
-    "EWJ": ["TOYOTA", "SONY", "MITSUBISHI UFJ"],
-    "MCHI": ["TENCENT", "ALIBABA", "PDD"],
-    "INDA": ["RELIANCE", "HDFC BANK", "ICICI BANK"],
-    "EWZ": ["PETROBRAS", "VALE", "ITAU UNIBANCO"],
-    "EWG": ["SAP", "SIEMENS", "ALLIANZ"],
-    "EWU": ["SHELL", "ASTRAZENECA", "HSBC"],
-    "EWC": ["SHOPIFY", "RBC", "TD BANK"],
-    "EWA": ["BHP", "CBA", "CSL"],
-    "EWY": ["SAMSUNG", "SK HYNIX", "LG ENERGY"],
-    "EWT": ["TSMC", "MEDIATEK", "HON HAI"],
-}
-
-
 # Equal-weight twin of each cap-weighted sector ETF. Not shown as rows any
 # more -- downloaded only to compute each sector's "EW vs CW" column (is the
 # typical stock in the sector keeping up with its mega-caps?). Invesco
@@ -569,9 +532,6 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
 
     if is_yield and prev_close is not None:
         entry["chg_1d_bps"] = round((last_price - prev_close) * 100, 1)
-
-    if ticker in TOP_HOLDINGS:
-        entry["top_holdings"] = TOP_HOLDINGS[ticker]
 
     # Popped off by build_section and written to its own file under
     # data/history/ rather than shipped inline -- 150+ tickers x ~252 days of
