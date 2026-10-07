@@ -8,7 +8,7 @@
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #000000;
@@ -32,7 +32,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "Share Tech Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "JetBrains Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
     font-variant-numeric: lining-nums tabular-nums;
     padding: 24px;
     max-width: 1200px;
@@ -148,7 +148,7 @@
     background: var(--panel);
     border: 1px solid var(--accent);
     box-shadow: 0 0 24px rgba(255,159,10,0.12), 0 12px 32px rgba(0,0,0,0.6);
-    font-family: "Share Tech Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
+    font-family: "JetBrains Mono", "IBM Plex Mono", "Consolas", "SF Mono", Menlo, monospace;
   }
   .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
   .chart-panel-title { font-weight: 700; font-size: 12.5px; }
@@ -532,12 +532,9 @@ const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
   { label: 'Weekly Trend', field: 'weekly_trend', type: 'dot' },
   { label: 'Daily Trend', field: 'trend', type: 'dot' },
-  { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot' },
   { label: 'Intermediate', field: 'inter_trend', type: 'dot',
     title: 'Faster entry filter. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
-  { label: 'Long-Term', field: 'long_trend', type: 'dot',
-    title: 'Green: price > 50-day SMA > 200-day SMA, and the 200-day is rising. Red: price below a falling 200-day. Otherwise yellow.' },
   { label: 'RS Rank', field: 'rs_rank', type: 'rs',
     title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
   { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext',
