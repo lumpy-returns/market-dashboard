@@ -64,6 +64,11 @@
     letter-spacing: 0;
     cursor: pointer;
   }
+  .seg-label { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+  .seg { display: inline-flex; }
+  .seg button { margin-left: -1px; }
+  .seg button:first-child { margin-left: 0; }
+  .seg button.active { position: relative; z-index: 1; }
   .toolbar-row button.active { color: var(--accent); border-color: var(--accent); background: rgba(255,159,10,0.08); }
 
   .mini-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 28px 0; }
@@ -234,13 +239,21 @@
     <button id="view-btn-traffic" class="active" onclick="setView('traffic')">Traffic Light</button>
     <button id="view-btn-minicharts" onclick="setView('minicharts')">Mini Charts</button>
     <button id="view-btn-rotation" onclick="setView('rotation')">Rotation</button>
+    <!-- Academic Momentum tab hidden. To bring it back: uncomment this button, the JS block
+         "Academic Momentum view", 'academic' in VIEWS, and the academic branch in renderApp().
     <button id="view-btn-academic" onclick="setView('academic')">Academic Momentum</button>
+    -->
   </div>
   <div class="toolbar-row">
     <span class="toolbar-label">Filters</span>
-    <button id="filter-btn-daily-uptrend" onclick="setFilter('daily_uptrend')">Uptrend on Daily</button>
-    <button id="filter-btn-weekly-uptrend" class="active" onclick="setFilter('weekly_uptrend')">Uptrend on Weekly</button>
-    <button id="filter-btn-pullback-daily" onclick="setFilter('pullback_daily')">Pullback on Daily</button>
+    <span class="seg-label">Daily</span>
+    <span class="seg" id="seg-daily">
+      <button data-state="" onclick="setTrendFilter('daily', null)">Off</button><button data-state="up" onclick="setTrendFilter('daily', 'up')">Uptrend</button><button data-state="down" onclick="setTrendFilter('daily', 'down')">Downtrend</button>
+    </span>
+    <span class="seg-label" style="margin-left:12px;">Weekly</span>
+    <span class="seg" id="seg-weekly">
+      <button data-state="" onclick="setTrendFilter('weekly', null)">Off</button><button data-state="up" class="active" onclick="setTrendFilter('weekly', 'up')">Uptrend</button><button data-state="down" onclick="setTrendFilter('weekly', 'down')">Downtrend</button>
+    </span>
   </div>
 </div>
 
@@ -277,8 +290,8 @@
 // ---------------------------------------------------------------------
 let DATA = null;
 let currentView = 'traffic';
-// null | 'daily_uptrend' | 'weekly_uptrend' | 'pullback_daily'
-let activeFilter = 'weekly_uptrend';
+// Trend filters: each null (off) | 'up' (green) | 'down' (red); both apply together.
+const trendFilter = { daily: null, weekly: 'up' };
 // per-table sort state, keyed by table id: { field, direction }
 const sortState = {};
 let tableCounter = 0;
@@ -484,30 +497,28 @@ function makeTable(rows, columns, linkType, initialSort) {
   return `<div style="overflow-x:auto;">${renderTable(tableId)}</div>`;
 }
 
+const TREND_COLOR = { up: 'green', down: 'red' };
+
 function filterRows(rows) {
-  if (activeFilter === 'daily_uptrend') return rows.filter(r => r.trend === 'green');
-  if (activeFilter === 'weekly_uptrend') return rows.filter(r => r.weekly_trend === 'green');
-  if (activeFilter === 'pullback_daily') return rows.filter(r => r.trend === 'yellow' && r.weekly_trend === 'green');
-  return rows;
+  return rows.filter(r =>
+    (!trendFilter.daily || r.trend === TREND_COLOR[trendFilter.daily]) &&
+    (!trendFilter.weekly || r.weekly_trend === TREND_COLOR[trendFilter.weekly]));
 }
 
-const FILTER_EMPTY_TEXT = {
-  daily_uptrend: 'No instruments currently in an uptrend on Daily Trend in this section.',
-  weekly_uptrend: 'No instruments currently in an uptrend on Weekly Trend in this section.',
-  pullback_daily: 'No instruments currently showing a Daily pullback within a Weekly uptrend in this section.',
-};
-
 function emptyFilterMessage() {
-  const text = FILTER_EMPTY_TEXT[activeFilter] || 'No instruments match the current filter in this section.';
+  const parts = [];
+  if (trendFilter.daily) parts.push(`${trendFilter.daily === 'up' ? 'an uptrend' : 'a downtrend'} on Daily Trend`);
+  if (trendFilter.weekly) parts.push(`${trendFilter.weekly === 'up' ? 'an uptrend' : 'a downtrend'} on Weekly Trend`);
+  const text = parts.length
+    ? `No instruments currently in ${parts.join(' and ')} in this section.`
+    : 'No instruments match the current filter in this section.';
   return `<p class="section-sub" style="margin-top:16px;">${text}</p>`;
 }
 
-function setFilter(name) {
-  activeFilter = activeFilter === name ? null : name;
-  ['daily_uptrend', 'weekly_uptrend', 'pullback_daily'].forEach(f => {
-    const id = 'filter-btn-' + f.replace(/_/g, '-');
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('active', activeFilter === f);
+function setTrendFilter(which, state) {
+  trendFilter[which] = state;
+  document.querySelectorAll('#seg-' + which + ' button').forEach(el => {
+    el.classList.toggle('active', (el.dataset.state || null) === state);
   });
   renderApp();
 }
@@ -564,7 +575,7 @@ const MACRO_GROUPS = [
   // US Index Futures -- disabled for now, may reuse this section later.
   // ['us_index_futures', 'US Index Futures'],
   ['global_indices', 'US Market Index'],
-  ['yields', 'US Treasury Yields'],
+  ['yields', 'US Rates'],
   ['energy', 'Oil and Gas'],
   ['vol_dollar', 'Volatility & Dollar'],
   ['metals', 'Precious & Base Metals'],
@@ -909,6 +920,7 @@ function buildRotationView(data) {
   return html;
 }
 
+/* ACADEMIC MOMENTUM VIEW (hidden -- uncomment to restore; see the button comment in the toolbar)
 // ---------------------------------------------------------------------
 // Academic Momentum view -- Jegadeesh-Titman style 12-1 / 6-1 momentum
 // ---------------------------------------------------------------------
@@ -982,7 +994,9 @@ function buildAcademicView(data) {
   return html;
 }
 
-const VIEWS = ['performance', 'traffic', 'minicharts', 'rotation', 'academic'];
+*/
+
+const VIEWS = ['performance', 'traffic', 'minicharts', 'rotation'];  // add 'academic' to restore that tab
 function setView(view) {
   currentView = view;
   VIEWS.forEach(v => {
@@ -1007,8 +1021,8 @@ function renderApp() {
     loadMiniCharts();
   } else if (currentView === 'rotation') {
     appEl.innerHTML = buildRotationView(DATA);
-  } else if (currentView === 'academic') {
-    appEl.innerHTML = buildAcademicView(DATA);
+  // } else if (currentView === 'academic') {   // Academic Momentum tab hidden
+  //   appEl.innerHTML = buildAcademicView(DATA);
   } else {
     appEl.innerHTML = buildTrafficView(DATA);
   }

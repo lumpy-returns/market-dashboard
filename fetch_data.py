@@ -38,10 +38,11 @@ MACRO = {
     "global_indices": [
         ("^GSPC", "S&P 500"),
     ],
-    # 10Y only; a synthetic "10Y - 3M" curve-spread row is appended in
+    # 10Y + 30Y; a synthetic "10Y - 3M" curve-spread row is appended in
     # main() from ^TNX and ^IRX (13-week bill, downloaded as an aux ticker).
     "yields": [
         ("^TNX", "10-Year Treasury"),
+        ("^TYX", "30-Year Treasury"),
     ],
     "energy": [
         ("CL=F", "WTI Crude"),
