@@ -143,6 +143,7 @@
   th.center-cell, td.center-cell { text-align: center; }
 
   td:first-child .ticker-link { font-weight: 600; }
+  .tk-slot { display: inline-block; }
   .ticker-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--muted); }
   .ticker-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
@@ -416,7 +417,7 @@ function renderTable(tableId) {
   // instrument name happens to be -- otherwise each table auto-sizes its
   // own "Instrument" column independently and the dot/data columns drift
   // out of alignment from section to section.
-  const COLUMN_WIDTH = { text: 250, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 96, rank: 72 };
+  const COLUMN_WIDTH = { text: 260, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 96, rank: 72 };
   let html = `<table id="${tableId}"><colgroup>`;
   columns.forEach(col => {
     html += `<col style="width:${COLUMN_WIDTH[col.type] || 90}px">`;
@@ -433,6 +434,8 @@ function renderTable(tableId) {
   });
   html += '</tr></thead><tbody>';
 
+  // Fixed-width ticker slot (widest ticker in this table + a gap) so every name starts at the same x.
+  const tickerCh = Math.max(...sortedRows.map(r => String(r.ticker).length), 1) + 2;
   sortedRows.forEach(r => {
     const hasHoldings = r.top_holdings && r.top_holdings.length > 0;
     const rowId = `hold-${tableCounter++}`;
@@ -440,7 +443,7 @@ function renderTable(tableId) {
     columns.forEach(col => {
       if (col.field === 'name') {
         const url = r.link || tickerUrl(r.ticker, linkType);
-        html += `<td><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a> <span class="neutral">${r.name}</span>${hasHoldings ? ' ▸' : ''}</td>`;
+        html += `<td><span class="tk-slot" style="min-width:${tickerCh}ch"><a class="ticker-link" href="${url}" target="_blank" rel="noopener noreferrer" data-ticker="${escapeAttr(r.ticker)}" data-name="${escapeAttr(r.name)}">${r.ticker}</a></span><span class="neutral">${r.name}</span>${hasHoldings ? ' ▸' : ''}</td>`;
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field])}</td>`;
       } else if (col.type === 'dot') {
