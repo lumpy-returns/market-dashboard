@@ -228,6 +228,24 @@
   .collapse-hint { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-left: auto; }
   details.collapsible[open] .collapse-hint { visibility: hidden; }
 
+  /* Trend guide (Traffic Light view) */
+  details.guide { border: 1px solid var(--border); background: var(--panel); margin-bottom: 8px; }
+  details.guide > summary { list-style: none; cursor: pointer; padding: 7px 12px; color: var(--accent); font-size: 11px; text-transform: uppercase; display: flex; align-items: center; }
+  details.guide > summary::-webkit-details-marker { display: none; }
+  details.guide[open] .collapse-hint { visibility: hidden; }
+  .guide-body { padding: 4px 14px 14px; }
+  .guide-roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .guide-role { border: 1px solid var(--border); padding: 8px 10px; }
+  .guide-role h4 { margin: 0 0 2px; color: var(--accent); font-size: 12px; text-transform: uppercase; }
+  .guide-role p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .guide-role p.role-job { color: var(--text); font-weight: 600; }
+  .guide-table { width: auto; margin-bottom: 10px; border-collapse: collapse; }
+  .guide-table th, .guide-table td { text-align: left; font-size: 12px; padding: 4px 12px 4px 0; border-bottom: 1px solid var(--border); white-space: normal; cursor: default; }
+  .guide-table th { color: var(--muted); border-bottom-color: var(--accent); text-transform: uppercase; }
+  .guide-note { color: var(--muted); font-size: 12px; line-height: 1.5; max-width: 90ch; margin: 0 0 10px; }
+  .guide-img { display: block; width: 100%; max-width: 980px; border: 1px solid var(--border); }
+  @media (max-width: 760px) { .guide-roles { grid-template-columns: 1fr; } }
+
   /* Academic Momentum view */
   .decile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
@@ -585,11 +603,11 @@ function performanceColumns(yieldMode) {
 
 const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
-  { label: 'Weekly Trend', field: 'weekly_trend', type: 'dot' },
-  { label: 'Daily Trend', field: 'trend', type: 'dot' },
-  { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot', width: 112 },
-  { label: 'Intermediate', field: 'inter_trend', type: 'dot', width: 132,
-    title: 'Faster entry filter. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
+  { label: 'Weekly<br>Trend', field: 'weekly_trend', type: 'dot' },
+  { label: 'Intermediate<br>Trend', field: 'inter_trend', type: 'dot', width: 132,
+    title: 'Gate for opening new positions. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
+  { label: 'Daily<br>Trend', field: 'trend', type: 'dot' },
+  { label: 'H/L vs 10-day EMA', field: 'state_vs_10ema', type: 'dot', width: 112 },
   { label: 'RS Rank', field: 'rs_rank', type: 'rs',
     title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
   { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext',
@@ -701,8 +719,33 @@ function buildSparklinesView(data) {
   return html;
 }
 
+function buildTrendGuide() {
+  return `<details class="guide">
+    <summary>▸ How to use the trend dots <span class="collapse-hint">click to expand</span></summary>
+    <div class="guide-body">
+      <div class="guide-roles">
+        <div class="guide-role"><h4>Weekly Trend</h4><p class="role-job">Which side of the market to be on.</p><p>Slowest and steadiest. Only look for new longs where it is green; treat red as a no-go or a short candidate.</p></div>
+        <div class="guide-role"><h4>Intermediate Trend</h4><p class="role-job">Gate for opening new positions.</p><p>Green = trending, with real progress. Yellow = stalling, even if the longer trend still looks fine. Skip new entries on yellow and tighten stops on what you already hold.</p></div>
+        <div class="guide-role"><h4>Daily Trend</h4><p class="role-job">Timing the entry.</p><p>Fastest and noisiest. Use it to catch pullbacks (yellow) inside a stronger trend, not to decide direction.</p></div>
+      </div>
+      <table class="guide-table">
+        <thead><tr><th>Weekly</th><th>Intermediate</th><th>Daily</th><th>Read</th></tr></thead>
+        <tbody>
+          <tr><td>${smallDot('green')}</td><td>${smallDot('green')}</td><td>${smallDot('yellow')}</td><td>Best setup: pullback inside a healthy uptrend. Check Ext (ATR) near 0 to 2 for a low-risk entry.</td></tr>
+          <tr><td>${smallDot('green')}</td><td>${smallDot('green')}</td><td>${smallDot('green')}</td><td>Trending and in gear. Fine to hold or add, but if Ext (ATR) is above 3 you would be chasing.</td></tr>
+          <tr><td>${smallDot('green')}</td><td>${smallDot('yellow')}</td><td>any</td><td>Stalling. No new entries; watch for the Intermediate dot to turn green again.</td></tr>
+          <tr><td>${smallDot('red')}</td><td>${smallDot('red')}</td><td>any</td><td>Downtrend. Avoid longs. A green Daily here is only a bounce.</td></tr>
+          <tr><td>${smallDot('yellow')}</td><td>any</td><td>any</td><td>Weekly trend unclear. Be selective and size smaller.</td></tr>
+        </tbody>
+      </table>
+      <p class="guide-note">Weekly and Daily use the same rule on different bars: green = 10 EMA &gt; 20 EMA and the bar's low &gt; 20 EMA; red = 10 EMA &lt; 20 EMA and the bar's high &lt; 20 EMA; otherwise yellow. Intermediate is a separate rule built on the 50 SMA that flags stalls early (hover its header for the details). These are mechanical filters for deciding whether to look at a trade. They are not buy or sell signals.</p>
+      <img class="guide-img" src="docs/trend-guide.png" alt="The Weekly, Daily and Intermediate trend dots drawn on the same price path, with their rules side by side" loading="lazy">
+    </div>
+  </details>`;
+}
+
 function buildTrafficView(data) {
-  let html = `<div class="section">
+  let html = buildTrendGuide() + `<div class="section">
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Macro</h2></div>
     <p class="section-sub">GREEN: 10EMA&gt;20EMA &amp; LOW&gt;20EMA · RED: 10EMA&lt;20EMA &amp; HIGH&lt;20EMA · ELSE YELLOW · HOVER COLUMN HEADERS FOR DEFINITIONS</p>`;
   let macroShown = 0;
