@@ -534,6 +534,8 @@ const trafficColumns = [
   { label: 'Daily Trend', field: 'trend', type: 'dot' },
   { label: '10 EMA vs 20 EMA', field: 'cond_10_gt_20', type: 'bool', falseColor: 'red' },
   { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot' },
+  { label: 'Intermediate', field: 'inter_trend', type: 'dot',
+    title: 'Faster entry filter. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
   { label: 'Long-Term', field: 'long_trend', type: 'dot',
     title: 'Green: price > 50-day SMA > 200-day SMA, and the 200-day is rising. Red: price below a falling 200-day. Otherwise yellow.' },
   { label: 'RS Rank', field: 'rs_rank', type: 'rs',
@@ -778,7 +780,7 @@ function buildChangesPanel(data) {
   if (!sc || !sc.changes) return '';
   // Weekly flips matter most, then the long-term trend, then daily noise;
   // within each, strongest RS first.
-  const order = { Weekly: 0, 'Long-term': 1, Daily: 2 };
+  const order = { Weekly: 0, 'Long-term': 1, Intermediate: 2, Daily: 3 };
   const sorted = [...sc.changes].sort((a, b) =>
     (order[a.signal] - order[b.signal]) || ((b.rs_rank ?? -1) - (a.rs_rank ?? -1)));
   const ups = sorted.filter(c => c.direction === 'up');

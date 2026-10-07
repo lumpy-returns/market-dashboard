@@ -327,6 +327,42 @@ def long_trend_signal(closes):
     return "yellow"
 
 
+FLAT_ATR = 0.25   # |MA slope| below this many ATRs = "flat" (stalling)
+
+
+def intermediate_trend_signal(closes, highs, lows):
+    """Faster entry filter (daily bars) built to flag stalling early:
+    green = close > 20 EMA > 50 SMA, 50 SMA rising over 10 bars and 20 EMA
+            rising over 5 bars (each by > 0.25 ATR), a new 20-day closing high
+            within the last 10 bars, and price above the 200-day (veto only);
+    red   = close < 50 SMA and the 50 SMA falling (by > 0.25 ATR over 10 bars);
+    else yellow (stacked but flat / no progress, or mixed)."""
+    if len(closes) < 61:
+        return None
+    ema20 = closes.ewm(span=20, adjust=False).mean()
+    sma50 = closes.rolling(50).mean()
+    prev_c = closes.shift(1)
+    tr = pd.concat([highs - lows, (highs - prev_c).abs(), (lows - prev_c).abs()],
+                   axis=1).max(axis=1)
+    atr = float(tr.ewm(alpha=1 / 14, adjust=False).mean().iloc[-1])
+    if atr <= 0:
+        return None
+    c, e20, s50 = float(closes.iloc[-1]), float(ema20.iloc[-1]), float(sma50.iloc[-1])
+    slope50 = (s50 - float(sma50.iloc[-11])) / atr
+    slope20 = (e20 - float(ema20.iloc[-6])) / atr
+    last20 = closes.iloc[-20:].to_numpy()
+    days_since_20d_high = len(last20) - 1 - int(last20.argmax())
+    above_200 = True
+    if len(closes) >= 200:
+        above_200 = c > float(closes.iloc[-200:].mean())
+    if (c > e20 > s50 and slope50 > FLAT_ATR and slope20 > FLAT_ATR
+            and days_since_20d_high < 10 and above_200):
+        return "green"
+    if c < s50 and slope50 < -FLAT_ATR:
+        return "red"
+    return "yellow"
+
+
 # IBD-style relative strength: most weight on the latest quarter.
 RS_WEIGHTS = ((63, 0.4), (126, 0.2), (189, 0.2), (252, 0.2))
 
@@ -420,16 +456,18 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
 
     # --- Long-term trend (price vs 50/200-day SMA, 200-day slope) ---
     long_trend = long_trend_signal(closes)
+    inter_trend = intermediate_trend_signal(closes, highs, lows)
 
     # --- Same three signals as of the previous bar, for "what changed today" ---
     # Recomputed from history rather than diffed against the last saved JSON,
     # so re-running the job (or a manual trigger) never wipes out the feed.
-    trend_prev = weekly_trend_prev = long_trend_prev = None
+    trend_prev = weekly_trend_prev = long_trend_prev = inter_trend_prev = None
     if len(closes) > 22:
         c1, h1, l1 = closes.iloc[:-1], highs.iloc[:-1], lows.iloc[:-1]
         trend_prev = daily_trend_signal(c1, h1, l1)
         weekly_trend_prev = weekly_trend_signal(weekly_frame(c1, h1, l1))
         long_trend_prev = long_trend_signal(c1)
+        inter_trend_prev = intermediate_trend_signal(c1, h1, l1)
 
     # --- Extension from the 20 EMA in ATR units (Wilder ATR-14) ---
     prev_c = closes.shift(1)
@@ -501,9 +539,11 @@ def build_instrument(ticker, name, closes, highs, lows, opens=None, is_yield=Fal
         "trend": trend,
         "weekly_trend": weekly_trend,
         "long_trend": long_trend,
+        "inter_trend": inter_trend,
         "trend_prev": trend_prev,
         "weekly_trend_prev": weekly_trend_prev,
         "long_trend_prev": long_trend_prev,
+        "inter_trend_prev": inter_trend_prev,
         "ext_atr": ext_atr,
         "atr_pct": atr_pct,
         "rs_score": round(rs_score, 4) if rs_score is not None else None,
@@ -739,7 +779,7 @@ def apply_ranks(equities_data):
 
 
 def compute_signal_changes(macro_data, equities_data):
-    """Every Daily / Weekly / Long-term dot that flipped vs. the previous bar."""
+    """Every Daily / Weekly / Intermediate / Long-term dot that flipped vs. the previous bar."""
     changes, seen = [], set()
     sections = [(f"macro.{k}", v) for k, v in macro_data.items()] + \
                [(f"equities.{k}", v) for k, v in equities_data.items()]
@@ -751,6 +791,7 @@ def compute_signal_changes(macro_data, equities_data):
             for signal, now_f, prev_f in (
                 ("Weekly", "weekly_trend", "weekly_trend_prev"),
                 ("Daily", "trend", "trend_prev"),
+                ("Intermediate", "inter_trend", "inter_trend_prev"),
                 ("Long-term", "long_trend", "long_trend_prev"),
             ):
                 now, prev = r.get(now_f), r.get(prev_f)
