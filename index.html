@@ -101,18 +101,19 @@
     text-overflow: ellipsis;
   }
   th:first-child, td:first-child { text-align: left; }
+  th:not(:first-child) { text-align: center; }
   td:first-child { color: var(--text); }
   tr.has-holdings td:first-child { cursor: pointer; }
   tr.has-holdings td:first-child:hover { color: var(--accent); }
   th {
     white-space: normal;
-    vertical-align: bottom;
+    vertical-align: middle;
     line-height: 1.25;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid var(--accent);
@@ -120,7 +121,7 @@
     padding-bottom: 4px;
   }
   th.sortable:hover { color: var(--accent); }
-  th .sort-arrow { font-size: 9px; margin-left: 3px; color: var(--accent); }
+  th .sort-arrow { font-size: 10px; margin-left: 3px; color: var(--accent); }
   tr:last-child td { border-bottom: none; }
   .up { color: var(--up); }
   .down { color: var(--down); }
@@ -427,7 +428,7 @@ function renderTable(tableId) {
   // instrument name happens to be -- otherwise each table auto-sizes its
   // own "Instrument" column independently and the dot/data columns drift
   // out of alignment from section to section.
-  const COLUMN_WIDTH = { text: 260, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 96, rank: 72 };
+  const COLUMN_WIDTH = { text: 260, price: 90, pct: 80, bps: 90, sparkline: 78, dot: 84, bool: 84, rs: 72, ext: 66, hi52: 104, rank: 72 };
   let html = `<table id="${tableId}"><colgroup>`;
   columns.forEach(col => {
     html += `<col style="width:${col.width || COLUMN_WIDTH[col.type] || 90}px">`;
@@ -584,8 +585,8 @@ const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
   { label: 'Weekly Trend', field: 'weekly_trend', type: 'dot' },
   { label: 'Daily Trend', field: 'trend', type: 'dot' },
-  { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot' },
-  { label: 'Intermediate', field: 'inter_trend', type: 'dot',
+  { label: 'High/Low vs 10 EMA', field: 'state_vs_10ema', type: 'dot', width: 112 },
+  { label: 'Intermediate', field: 'inter_trend', type: 'dot', width: 132,
     title: 'Faster entry filter. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
   { label: 'RS Rank', field: 'rs_rank', type: 'rs',
     title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
