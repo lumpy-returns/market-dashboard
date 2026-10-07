@@ -151,6 +151,7 @@
   .dot-yellow { background: var(--dot-yellow); }
   .dot-grey { background: var(--dot-grey); }
   th.center-cell, td.center-cell { text-align: center; }
+  th.th-right:not(:first-child) { text-align: right; }
 
   td:first-child .ticker-link { font-weight: 600; }
   .tk-slot { display: inline-block; }
@@ -438,7 +439,8 @@ function renderTable(tableId) {
     const isSorted = state.field === col.field;
     const arrow = isSorted ? `<span class="sort-arrow">${state.direction === 'asc' ? '▲' : '▼'}</span>` : '';
     const sortCls = col.sortable !== false ? 'sortable' : '';
-    const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell' : '';
+    const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell'
+      : (['rs', 'ext', 'hi52'].includes(col.type) || col.field === 'ew_vs_cw_3m') ? 'th-right' : '';
     const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
     const title = col.title ? `title="${escapeAttr(col.title)}"` : '';
     html += `<th class="${sortCls} ${alignCls}" ${onclick} ${title}>${col.label}${arrow}</th>`;
