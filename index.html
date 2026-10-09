@@ -536,6 +536,7 @@ function alignTickerSlots() {
     if (!slots.length) return;
     slots.forEach(el => { el.style.width = ''; });
     const w = Math.max(...slots.map(el => el.getBoundingClientRect().width));
+    if (!w) return; // hidden (collapsed): re-measured on expand
     slots.forEach(el => { el.style.width = Math.ceil(w) + 14 + 'px'; });
   });
 }
@@ -1187,6 +1188,7 @@ function toggleCollapse(el) {
   collapsedState[k] = !isCollapsed(k);
   saveCollapsed();
   applyCollapsed();
+  alignTickerSlots();
 }
 document.addEventListener('click', e => {
   const el = e.target.closest && e.target.closest('#app .section-head, #app .subtable-label');
