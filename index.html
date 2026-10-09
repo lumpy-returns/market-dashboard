@@ -88,6 +88,16 @@
   .section-title { font-size: 20px; font-weight: 700; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 0.3px; }
   .section-sub { color: var(--muted); font-size: 11px; letter-spacing: 0; margin: 0 0 8px 0; }
   .subtable-label { color: var(--accent); font-size: 12px; margin: 16px 0 6px 0; }
+  /* Click a section title or sub-table label to hide / show it */
+  #app .section-head, #app .subtable-label { cursor: pointer; user-select: none; }
+  #app .section-head:hover .section-title, #app .subtable-label:hover { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+  #app .section-head:focus-visible, #app .subtable-label:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  #app .section-head .section-title::after { content: "\25BE"; font-size: 12px; margin-left: 8px; color: var(--muted); }
+  #app .section.collapsed > .section-head .section-title::after { content: "\25B8"; }
+  .subtable-label .chev::before { content: "\25BE"; }
+  .subtable-label.collapsed .chev::before { content: "\25B8"; }
+  .is-collapsed { display: none !important; }
+  .section.collapsed > *:not(.section-head) { display: none !important; }
 
   table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); font-weight: 600; }
   th, td {
@@ -666,7 +676,7 @@ function buildPerformanceView(data) {
     const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
     macroShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, performanceColumns(key === 'yields'), 'quote');
   });
   if (macroShown === 0) html += emptyFilterMessage();
@@ -680,7 +690,7 @@ function buildPerformanceView(data) {
     const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
     equitiesShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, sectorAware(performanceColumns(false), key), 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
@@ -698,7 +708,7 @@ function buildSparklinesView(data) {
     const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
     macroShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, sparklineColumns, 'quote');
   });
   if (macroShown === 0) html += emptyFilterMessage();
@@ -711,7 +721,7 @@ function buildSparklinesView(data) {
     const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
     equitiesShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, sparklineColumns, 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
@@ -753,7 +763,7 @@ function buildTrafficView(data) {
     const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
     macroShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, trafficColumns, 'quote');
   });
   if (macroShown === 0) html += emptyFilterMessage();
@@ -767,7 +777,7 @@ function buildTrafficView(data) {
     const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
     equitiesShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, sectorAware(trafficColumns, key), 'holdings');
   });
   if (equitiesShown === 0) html += emptyFilterMessage();
@@ -818,7 +828,7 @@ function buildMiniChartsView(data) {
     const rows = filterRows((data.macro || {})[key] || []);
     if (rows.length === 0) return;
     macroShown++;
-    html += `<div class="subtable-label">▸ ${label}</div><div class="mini-chart-grid">`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div><div class="mini-chart-grid">`;
     rows.forEach(r => { html += buildMiniChartCard(r, 'quote'); });
     html += '</div>';
   });
@@ -833,7 +843,7 @@ function buildMiniChartsView(data) {
     const rows = filterRows((data.equities || {})[key] || []);
     if (rows.length === 0) return;
     equitiesShown++;
-    html += `<div class="subtable-label">▸ ${label}</div><div class="mini-chart-grid">`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div><div class="mini-chart-grid">`;
     rows.forEach(r => { html += buildMiniChartCard(r, 'holdings'); });
     html += '</div>';
   });
@@ -1081,8 +1091,8 @@ function buildAcademicView(data) {
     <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Winners &amp; Losers</h2></div>
     <p class="section-sub">TOP / BOTTOM DECILE BY 12-1M MOMENTUM · ALL ${universe.length} EQUITY ETFS · FILTERS DON'T APPLY HERE</p>
     <div class="decile-grid">
-      <div><div class="subtable-label">▸ Winners (top ${n})</div>${makeTable(universe.slice(0, n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'desc' })}</div>
-      <div><div class="subtable-label">▸ Losers (bottom ${n})</div>${makeTable(universe.slice(-n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'asc' })}</div>
+      <div><div class="subtable-label"><span class="chev"></span> Winners (top ${n})</div>${makeTable(universe.slice(0, n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'desc' })}</div>
+      <div><div class="subtable-label"><span class="chev"></span> Losers (bottom ${n})</div>${makeTable(universe.slice(-n), decileCols, 'holdings', { field: 'mom_12_1_pct', direction: 'asc' })}</div>
     </div></div>`;
 
   html += `<div class="section">
@@ -1094,7 +1104,7 @@ function buildAcademicView(data) {
     const rows = filterRows((data.macro || {})[key] || []);
     if (!rows.length) return;
     macroShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, academicColumns(false), 'quote', { field: 'mom_12_1_pct', direction: 'desc' });
   });
   if (macroShown === 0) html += emptyFilterMessage();
@@ -1108,7 +1118,7 @@ function buildAcademicView(data) {
     const rows = filterRows((data.equities || {})[key] || []);
     if (!rows.length) return;
     eqShown++;
-    html += `<div class="subtable-label">▸ ${label}</div>`;
+    html += `<div class="subtable-label"><span class="chev"></span> ${label}</div>`;
     html += makeTable(rows, academicColumns(true), 'holdings', { field: 'mom_12_1_pct', direction: 'desc' });
   });
   if (eqShown === 0) html += emptyFilterMessage();
@@ -1127,6 +1137,53 @@ function setView(view) {
   });
   renderApp();
 }
+
+// ---------------------------------------------------------------------
+// Collapsible sections: click any section title (Macro, Equities, ...) or
+// sub-table label to hide / show it. Remembered per view in this browser.
+// ---------------------------------------------------------------------
+const collapsedSet = new Set();
+try { JSON.parse(localStorage.getItem('md_collapsed') || '[]').forEach(k => collapsedSet.add(k)); } catch (e) { /* storage unavailable */ }
+function saveCollapsed() {
+  try { localStorage.setItem('md_collapsed', JSON.stringify([...collapsedSet])); } catch (e) { /* ignore */ }
+}
+function collapseKey(el) {
+  if (el.classList.contains('section-head')) {
+    const t = el.querySelector('.section-title');
+    return currentView + '|S|' + (t ? t.textContent.trim() : '');
+  }
+  return currentView + '|L|' + el.textContent.replace(/[\u25B8\u25BE]/g, '').trim();
+}
+function applyCollapsed() {
+  document.querySelectorAll('#app .section-head').forEach(h => {
+    const sec = h.closest('.section');
+    const c = collapsedSet.has(collapseKey(h));
+    if (sec) sec.classList.toggle('collapsed', c);
+    h.setAttribute('tabindex', '0'); h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(!c));
+  });
+  document.querySelectorAll('#app .subtable-label').forEach(l => {
+    const c = collapsedSet.has(collapseKey(l));
+    l.classList.toggle('collapsed', c);
+    const body = l.nextElementSibling;
+    if (body) body.classList.toggle('is-collapsed', c);
+    l.setAttribute('tabindex', '0'); l.setAttribute('role', 'button'); l.setAttribute('aria-expanded', String(!c));
+  });
+}
+function toggleCollapse(el) {
+  const k = collapseKey(el);
+  if (collapsedSet.has(k)) collapsedSet.delete(k); else collapsedSet.add(k);
+  saveCollapsed();
+  applyCollapsed();
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest && e.target.closest('#app .section-head, #app .subtable-label');
+  if (el) toggleCollapse(el);
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest && e.target.closest('#app .section-head, #app .subtable-label');
+  if (el && e.target === el) { e.preventDefault(); toggleCollapse(el); }
+});
 
 function renderApp() {
   if (!DATA) return;
@@ -1150,6 +1207,7 @@ function renderApp() {
   } else {
     appEl.innerHTML = buildTrafficView(DATA);
   }
+  applyCollapsed();
   alignTickerSlots();
   // Re-measure once the web font has actually loaded (widths change with the face).
   if (document.fonts && document.fonts.load) {
