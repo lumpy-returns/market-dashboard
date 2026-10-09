@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-09T21:26:08.561279+00:00",
+  "last_updated_utc": "2026-10-09T22:08:33.761739+00:00",
   "macro": {
     "global_indices": [
       {
@@ -5024,13 +5024,13 @@
       {
         "ticker": "BTC-USD",
         "name": "Bitcoin",
-        "price": 82495.22,
-        "chg_1d_pct": 1.0,
-        "chg_1w_pct": -4.61,
-        "chg_1m_pct": 1.97,
-        "chg_3m_pct": 27.15,
-        "chg_1y_pct": -1.94,
-        "pct_from_52w_high": -4.74,
+        "price": 82432.5,
+        "chg_1d_pct": 0.93,
+        "chg_1w_pct": -4.68,
+        "chg_1m_pct": 1.89,
+        "chg_3m_pct": 27.05,
+        "chg_1y_pct": -2.02,
+        "pct_from_52w_high": -4.82,
         "days_since_52w_high": 18,
         "sparkline_20d": [
           81142.61,
@@ -5052,7 +5052,7 @@
           85557.56,
           83275.93,
           81676.34,
-          82495.22
+          82432.5
         ],
         "sparkline_3m": [
           64904.69,
@@ -5117,7 +5117,7 @@
           85557.56,
           83275.93,
           81676.34,
-          82495.22
+          82432.5
         ],
         "sparkline_10d": [
           83553.85,
@@ -5129,7 +5129,7 @@
           85557.56,
           83275.93,
           81676.34,
-          82495.22
+          82432.5
         ],
         "sparkline_6m": [
           60867.41,
@@ -5257,7 +5257,7 @@
           85557.56,
           83275.93,
           81676.34,
-          82495.22
+          82432.5
         ],
         "sparkline_12m": [
           76974.45,
@@ -5385,7 +5385,7 @@
           84763.58,
           85786.59,
           83275.93,
-          82495.22
+          82432.5
         ],
         "trend": "yellow",
         "weekly_trend": "green",
@@ -5395,10 +5395,10 @@
         "weekly_trend_prev": "green",
         "long_trend_prev": "green",
         "inter_trend_prev": "yellow",
-        "ext_atr": -0.34,
+        "ext_atr": -0.36,
         "atr_pct": 2.66,
-        "rs_score": 0.222,
-        "chg_6m_pct": 35.41,
+        "rs_score": 0.2211,
+        "chg_6m_pct": 35.31,
         "mom_12_1_pct": -3.84,
         "mom_6_1_pct": 32.79,
         "cond_10_gt_20": true,
@@ -5409,13 +5409,13 @@
       {
         "ticker": "ETH-USD",
         "name": "Ethereum",
-        "price": 2481.2,
-        "chg_1d_pct": 0.38,
-        "chg_1w_pct": -9.0,
-        "chg_1m_pct": -4.98,
-        "chg_3m_pct": 29.68,
-        "chg_1y_pct": -8.18,
-        "pct_from_52w_high": -10.63,
+        "price": 2480.71,
+        "chg_1d_pct": 0.36,
+        "chg_1w_pct": -9.02,
+        "chg_1m_pct": -5.0,
+        "chg_3m_pct": 29.66,
+        "chg_1y_pct": -8.2,
+        "pct_from_52w_high": -10.65,
         "days_since_52w_high": 18,
         "sparkline_20d": [
           2643.0,
@@ -5437,7 +5437,7 @@
           2697.52,
           2573.53,
           2471.91,
-          2481.2
+          2480.71
         ],
         "sparkline_3m": [
           1915.53,
@@ -5502,7 +5502,7 @@
           2697.52,
           2573.53,
           2471.91,
-          2481.2
+          2480.71
         ],
         "sparkline_10d": [
           2683.68,
@@ -5514,7 +5514,7 @@
           2697.52,
           2573.53,
           2471.91,
-          2481.2
+          2480.71
         ],
         "sparkline_6m": [
           1568.77,
@@ -5642,7 +5642,7 @@
           2697.52,
           2573.53,
           2471.91,
-          2481.2
+          2480.71
         ],
         "sparkline_12m": [
           2267.96,
@@ -5770,7 +5770,7 @@
           2687.26,
           2711.03,
           2573.53,
-          2481.2
+          2480.71
         ],
         "trend": "red",
         "weekly_trend": "green",
@@ -5782,8 +5782,8 @@
         "inter_trend_prev": "yellow",
         "ext_atr": -1.56,
         "atr_pct": 3.5,
-        "rs_score": 0.2579,
-        "chg_6m_pct": 56.95,
+        "rs_score": 0.2577,
+        "chg_6m_pct": 56.92,
         "mom_12_1_pct": -3.37,
         "mom_6_1_pct": 65.19,
         "cond_10_gt_20": false,
@@ -5794,13 +5794,13 @@
       {
         "ticker": "SOL-USD",
         "name": "Solana",
-        "price": 109.07,
-        "chg_1d_pct": -0.34,
-        "chg_1w_pct": -10.25,
-        "chg_1m_pct": -3.13,
-        "chg_3m_pct": 48.11,
-        "chg_1y_pct": -7.07,
-        "pct_from_52w_high": -10.64,
+        "price": 108.75,
+        "chg_1d_pct": -0.63,
+        "chg_1w_pct": -10.51,
+        "chg_1m_pct": -3.42,
+        "chg_3m_pct": 47.67,
+        "chg_1y_pct": -7.34,
+        "pct_from_52w_high": -10.9,
         "days_since_52w_high": 12,
         "sparkline_20d": [
           111.13,
@@ -5822,7 +5822,7 @@
           120.79,
           116.22,
           109.44,
-          109.07
+          108.75
         ],
         "sparkline_3m": [
           75.97,
@@ -5887,7 +5887,7 @@
           120.79,
           116.22,
           109.44,
-          109.07
+          108.75
         ],
         "sparkline_10d": [
           117.99,
@@ -5899,7 +5899,7 @@
           120.79,
           116.22,
           109.44,
-          109.07
+          108.75
         ],
         "sparkline_6m": [
           62.19,
@@ -6027,7 +6027,7 @@
           120.79,
           116.22,
           109.44,
-          109.07
+          108.75
         ],
         "sparkline_12m": [
           100.85,
@@ -6155,7 +6155,7 @@
           119.65,
           120.75,
           116.22,
-          109.07
+          108.75
         ],
         "trend": "yellow",
         "weekly_trend": "green",
@@ -6165,10 +6165,10 @@
         "weekly_trend_prev": "green",
         "long_trend_prev": "green",
         "inter_trend_prev": "yellow",
-        "ext_atr": -1.27,
-        "atr_pct": 4.29,
-        "rs_score": 0.3933,
-        "chg_6m_pct": 71.8,
+        "ext_atr": -1.33,
+        "atr_pct": 4.3,
+        "rs_score": 0.3892,
+        "chg_6m_pct": 71.3,
         "mom_12_1_pct": -4.06,
         "mom_6_1_pct": 77.36,
         "cond_10_gt_20": true,
