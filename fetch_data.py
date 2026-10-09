@@ -190,24 +190,28 @@ EQUITIES = {
     ],
 }
 
-# Equal-weight twin of each cap-weighted sector ETF. Not shown as rows any
-# more -- downloaded only to compute each sector's "EW vs CW" column (is the
+# Equal-weight twin of each cap-weighted sector ETF. Used for the
+# EW-vs-CW column and (again) shown as its own table; originally just downloaded to compute each sector's "EW vs CW" column (is the
 # typical stock in the sector keeping up with its mega-caps?). Invesco
 # renamed this suite in June 2024 (RYT/RYF/RYH/RCD/RHS/RYE/RGI/RTM/EWRE/RYU/
 # EWCO -> RSP*); see data/delisted_instruments.json.
 SECTOR_EW_PAIRS = {
-    "XLK": ("RSPT", "Technology (EW)"),
-    "XLF": ("RSPF", "Financials (EW)"),
-    "XLV": ("RSPH", "Health Care (EW)"),
-    "XLY": ("RSPD", "Consumer Discretionary (EW)"),
-    "XLP": ("RSPS", "Consumer Staples (EW)"),
-    "XLE": ("RSPG", "Energy (EW)"),
-    "XLI": ("RSPN", "Industrials (EW)"),
-    "XLB": ("RSPM", "Materials (EW)"),
-    "XLRE": ("RSPR", "Real Estate (EW)"),
-    "XLU": ("RSPU", "Utilities (EW)"),
-    "XLC": ("RSPC", "Communication Services (EW)"),
+    "XLK": ("RSPT", "Technology"),
+    "XLF": ("RSPF", "Financials"),
+    "XLV": ("RSPH", "Health Care"),
+    "XLY": ("RSPD", "Cons Discretionary"),
+    "XLP": ("RSPS", "Consumer Staples"),
+    "XLE": ("RSPG", "Energy"),
+    "XLI": ("RSPN", "Industrials"),
+    "XLB": ("RSPM", "Materials"),
+    "XLRE": ("RSPR", "Real Estate"),
+    "XLU": ("RSPU", "Utilities"),
+    "XLC": ("RSPC", "Comm Services"),
 }
+
+# Equal-weight sector ETFs, shown as their own table (right after the
+# cap-weighted sectors). Also feeds each sector's "EW vs CW 3M" column.
+EQUITIES["sectors_ew"] = list(SECTOR_EW_PAIRS.values())
 
 def safe_ticker_filename(ticker):
     """Filesystem- and URL-safe stand-in for a ticker, used to name its

@@ -468,7 +468,7 @@ function renderTable(tableId) {
     const arrow = isSorted ? `<span class="sort-arrow">${state.direction === 'asc' ? '▲' : '▼'}</span>` : '';
     const sortCls = col.sortable !== false ? 'sortable' : '';
     const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell'
-      : (['rs', 'ext', 'hi52'].includes(col.type) || col.field === 'ew_vs_cw_3m') ? 'th-right' : '';
+      : (['rs', 'ext', 'hi52', 'price', 'pct', 'bps'].includes(col.type) || col.field === 'ew_vs_cw_3m') ? 'th-right' : '';
     const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
     const title = col.title ? `title="${escapeAttr(col.title)}"` : '';
     html += `<th class="${sortCls} ${alignCls}" ${onclick} ${title}>${col.label}${arrow}</th>`;
@@ -661,7 +661,8 @@ const MACRO_GROUPS = [
 const EQUITIES_GROUPS = [
   ['major_etfs', 'Major ETF Stats'],
   ['sp500_submarket', 'S&P 500 Sub-Market — Style Factors'],
-  ['sectors', 'S&P 500 Sectors'],
+  ['sectors_ew', 'S&P 500 Sectors — Equal Weight'],
+  ['sectors', 'S&P 500 Sectors — Market Weight'],
   ['themes', 'Thematic ETFs'],
   ['countries_developed', 'Country ETFs — Developed'],
   ['countries_emerging', 'Country ETFs — Emerging'],
@@ -1142,10 +1143,22 @@ function setView(view) {
 // Collapsible sections: click any section title (Macro, Equities, ...) or
 // sub-table label to hide / show it. Remembered per view in this browser.
 // ---------------------------------------------------------------------
-const collapsedSet = new Set();
-try { JSON.parse(localStorage.getItem('md_collapsed') || '[]').forEach(k => collapsedSet.add(k)); } catch (e) { /* storage unavailable */ }
+// Explicit user choices: key -> true (hidden) / false (shown). Anything the user has
+// not touched falls back to DEFAULT_COLLAPSED below.
+const collapsedState = {};
+const DEFAULT_COLLAPSED_LABELS = ['S&P 500 Sectors — Market Weight'];
+function isDefaultCollapsed(key) {
+  return DEFAULT_COLLAPSED_LABELS.some(l => key.endsWith('|L|' + l));
+}
+function isCollapsed(key) {
+  return key in collapsedState ? collapsedState[key] : isDefaultCollapsed(key);
+}
+try {
+  Object.assign(collapsedState, JSON.parse(localStorage.getItem('md_collapsed2') || '{}'));
+  JSON.parse(localStorage.getItem('md_collapsed') || '[]').forEach(k => { if (!(k in collapsedState)) collapsedState[k] = true; });
+} catch (e) { /* storage unavailable */ }
 function saveCollapsed() {
-  try { localStorage.setItem('md_collapsed', JSON.stringify([...collapsedSet])); } catch (e) { /* ignore */ }
+  try { localStorage.setItem('md_collapsed2', JSON.stringify(collapsedState)); } catch (e) { /* ignore */ }
 }
 function collapseKey(el) {
   if (el.classList.contains('section-head')) {
@@ -1157,12 +1170,12 @@ function collapseKey(el) {
 function applyCollapsed() {
   document.querySelectorAll('#app .section-head').forEach(h => {
     const sec = h.closest('.section');
-    const c = collapsedSet.has(collapseKey(h));
+    const c = isCollapsed(collapseKey(h));
     if (sec) sec.classList.toggle('collapsed', c);
     h.setAttribute('tabindex', '0'); h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(!c));
   });
   document.querySelectorAll('#app .subtable-label').forEach(l => {
-    const c = collapsedSet.has(collapseKey(l));
+    const c = isCollapsed(collapseKey(l));
     l.classList.toggle('collapsed', c);
     const body = l.nextElementSibling;
     if (body) body.classList.toggle('is-collapsed', c);
@@ -1171,7 +1184,7 @@ function applyCollapsed() {
 }
 function toggleCollapse(el) {
   const k = collapseKey(el);
-  if (collapsedSet.has(k)) collapsedSet.delete(k); else collapsedSet.add(k);
+  collapsedState[k] = !isCollapsed(k);
   saveCollapsed();
   applyCollapsed();
 }
