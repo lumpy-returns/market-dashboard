@@ -8,7 +8,7 @@
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #000000;
@@ -32,7 +32,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "Manrope", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+    font-family: "Manrope", "Inter", system-ui, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
     font-variant-numeric: lining-nums tabular-nums;
     font-feature-settings: "tnum" 1, "lnum" 1;
     padding: 24px;
@@ -262,13 +262,26 @@
   @media (max-width: 760px) {
     .changes-body, .quad-grid, .decile-grid { grid-template-columns: 1fr; }
   }
+
+  .hdr-right { display:flex; align-items:baseline; gap:14px; }
+  .lang-toggle { display:inline-flex; border:1px solid var(--border); }
+  .lang-toggle button { background:var(--panel); color:var(--muted); border:0; padding:3px 9px; font:inherit; font-size:11px; cursor:pointer; }
+  .lang-toggle button + button { border-left:1px solid var(--border); }
+  .lang-toggle button.active { color:#000; background:var(--accent); font-weight:700; }
+  html[lang="zh-Hant"] h1, html[lang="zh-Hant"] th, html[lang="zh-Hant"] .toolbar-label { letter-spacing:0; text-transform:none; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>Market Dashboard</h1>
-  <div id="last-updated">Loading...</div>
+  <div class="hdr-right">
+    <div id="last-updated">Loading...</div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+      <button id="lang-zh" onclick="setLang('zh')">繁體</button>
+    </div>
+  </div>
 </header>
 
 <div id="regime-banner"></div>
@@ -326,6 +339,98 @@
   <div id="chart-panel-legend" class="chart-panel-legend">— 20 EMA · daily bars</div>
 </div>
 
+<script src="i18n_zh.js"></script>
+<script>
+/* ---- Language toggle (EN / Traditional Chinese). Translates rendered text in place;
+        translations live in i18n_zh.js. Missing strings stay English. ---- */
+let LANG = 'en';
+try { LANG = localStorage.getItem('md_lang') === 'zh' ? 'zh' : 'en'; } catch (e) {}
+const MONTHS = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+function zhTranslate(src) {
+  const ZH = window.ZH || {};
+  const lead = src.match(/^\s*/)[0], trail = src.match(/\s*$/)[0];
+  const core = src.trim();
+  if (!core) return src;
+  let out = ZH[core];
+  if (out === undefined) {
+    for (const [re, fn] of (window.ZH_PATTERNS || [])) {
+      const m = core.match(re);
+      if (m) { out = fn(...m); break; }
+    }
+  }
+  if (out === undefined) out = core;
+  out = out.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{1,2})(?:, (\d{4}))?/g,
+    (m, mo, d, y) => (y ? y + '年' : '') + MONTHS[mo] + '月' + d + '日');
+  out = out.replace(/(\d{1,2}:\d{2}) (AM|PM)/g, (m, t, ap) => (ap === 'AM' ? '上午' : '下午') + t);
+  return lead + out + trail;
+}
+const I18N_ATTRS = ['title', 'aria-label'];
+function trText(n) {
+  if (LANG === 'zh') {
+    const src = (n._zh !== undefined && n.nodeValue === n._zh) ? n._en : n.nodeValue;
+    n._en = src; n._zh = zhTranslate(src);
+    if (n.nodeValue !== n._zh) n.nodeValue = n._zh;
+  } else if (n._zh !== undefined && n.nodeValue === n._zh) {
+    n.nodeValue = n._en; n._zh = undefined;
+  }
+}
+function trAttrs(el) {
+  I18N_ATTRS.forEach(a => {
+    const v = el.getAttribute(a);
+    if (v === null) return;
+    el._i = el._i || {};
+    const rec = el._i[a];
+    if (LANG === 'zh') {
+      const src = (rec && v === rec.zh) ? rec.en : v;
+      const zh = zhTranslate(src);
+      el._i[a] = { en: src, zh };
+      if (v !== zh) el.setAttribute(a, zh);
+    } else if (rec && v === rec.zh) {
+      el.setAttribute(a, rec.en); delete el._i[a];
+    }
+  });
+}
+function trTree(root) {
+  if (root.nodeType === 3) { trText(root); return; }
+  if (root.nodeType !== 1 || /^(SCRIPT|STYLE)$/.test(root.tagName)) return;
+  trAttrs(root);
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = w.nextNode())) {
+    if (n.nodeType === 3) { if (!/^(SCRIPT|STYLE)$/.test(n.parentNode.tagName)) trText(n); }
+    else trAttrs(n);
+  }
+}
+let i18nBusy = false;
+const i18nObserver = new MutationObserver(muts => {
+  if (i18nBusy) return;
+  i18nBusy = true;
+  try {
+    muts.forEach(m => {
+      if (m.type === 'childList') m.addedNodes.forEach(trTree);
+      else if (m.type === 'characterData') trText(m.target);
+      else if (m.type === 'attributes') trAttrs(m.target);
+    });
+  } finally { i18nBusy = false; }
+  if (typeof alignTickerSlots === 'function') alignTickerSlots();
+});
+function setLang(l, initial) {
+  LANG = l === 'zh' ? 'zh' : 'en';
+  try { localStorage.setItem('md_lang', LANG); } catch (e) {}
+  document.documentElement.lang = LANG === 'zh' ? 'zh-Hant' : 'en';
+  document.getElementById('lang-en').classList.toggle('active', LANG === 'en');
+  document.getElementById('lang-zh').classList.toggle('active', LANG === 'zh');
+  if (!window.__enTitle) window.__enTitle = document.title;
+  document.title = LANG === 'zh' ? zhTranslate(window.__enTitle) : window.__enTitle;
+  i18nBusy = true; trTree(document.body); i18nBusy = false;
+  if (!initial && typeof alignTickerSlots === 'function') alignTickerSlots();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  setLang(LANG, true);
+  i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true,
+                                        attributes: true, attributeFilter: I18N_ATTRS });
+});
+</script>
 <script>
 // ---------------------------------------------------------------------
 // Global state
