@@ -1,4 +1,10 @@
 {
-  "checked_utc": "2026-10-12T22:08:26.685186+00:00",
-  "failed": []
+  "checked_utc": "2026-10-13T22:17:28.292843+00:00",
+  "failed": [
+    {
+      "ticker": "XBI",
+      "name": "Biotechnology",
+      "section": "equities.themes"
+    }
+  ]
 }
