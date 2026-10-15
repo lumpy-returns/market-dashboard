@@ -143,7 +143,7 @@ EQUITIES = {
         ("PHO", "Water Resources"),
         ("IHE", "Pharmaceuticals"),
         ("LIT", "Lithium & Battery"),
-        ("IHF", "HC Providers"),
+        ("IHF", "Healthcare Providers"),
         ("IAI", "Brokers/Exchanges"),
         ("MOO", "Agribusiness"),
         ("TAN", "Solar"),

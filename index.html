@@ -270,6 +270,15 @@
   .lang-toggle button + button { border-left:1px solid var(--border); }
   .lang-toggle button.active { color:#000; background:var(--accent); font-weight:700; }
   html[lang="zh-Hant"] h1, html[lang="zh-Hant"] th, html[lang="zh-Hant"] .toolbar-label { letter-spacing:0; text-transform:none; }
+
+  #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td { background: rgba(255,159,10,0.10); }
+  #dot-tip { position: fixed; z-index: 60; display: none; max-width: 340px; background: #0a0a0a; border: 1px solid var(--accent); padding: 8px 12px 9px; font-size: 12px; font-weight: 500; line-height: 1.45; color: var(--text); pointer-events: none; box-shadow: 0 4px 18px rgba(0,0,0,0.7); }
+  #dot-tip h5 { margin: 0 0 5px; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; font-weight: 700; }
+  #dot-tip ul { list-style: none; margin: 0; padding: 0; }
+  #dot-tip li { position: relative; padding: 2px 0 2px 18px; }
+  #dot-tip li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+  #dot-tip li.g { --c: var(--dot-green); } #dot-tip li.y { --c: var(--dot-yellow); } #dot-tip li.r { --c: var(--dot-red); }
+  #dot-tip li b { font-weight: 700; color: var(--text); }
 </style>
 </head>
 <body>
@@ -576,8 +585,9 @@ function renderTable(tableId) {
     const alignCls = (col.type === 'dot' || col.type === 'bool' || col.type === 'sparkline') ? 'center-cell'
       : (['rs', 'ext', 'hi52', 'price', 'pct', 'bps'].includes(col.type) || col.field === 'ew_vs_cw_3m') ? 'th-right' : '';
     const onclick = col.sortable !== false ? `onclick="handleSort('${tableId}','${col.field}')"` : '';
-    const title = col.title ? `title="${escapeAttr(col.title)}"` : '';
-    html += `<th class="${sortCls} ${alignCls}" ${onclick} ${title}>${col.label}${arrow}</th>`;
+    const title = (col.title && !col.tip) ? `title="${escapeAttr(col.title)}"` : '';
+    const tipAttr = col.tip ? `data-tip="${col.tip}${col.field === 'weekly_trend' ? ':Weekly' : col.field === 'trend' ? ':Daily' : ''}"` : '';
+    html += `<th class="${sortCls} ${alignCls}" ${onclick} ${title} ${tipAttr}>${col.label}${arrow}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -599,7 +609,7 @@ function renderTable(tableId) {
       } else if (col.type === 'sparkline') {
         html += `<td class="center-cell">${sparklineSvg(r[col.field], col.sparkW, col.sparkH)}</td>`;
       } else if (col.type === 'dot') {
-        html += `<td class="center-cell">${dot(r[col.field])}</td>`;
+        html += `<td class="center-cell" ${col.tip ? `data-tip="${col.tip}${col.field === 'weekly_trend' ? ':Weekly' : col.field === 'trend' ? ':Daily' : ''}"` : ''}>${dot(r[col.field])}</td>`;
       } else if (col.type === 'bool') {
         html += `<td class="center-cell">${boolDot(r[col.field], col.falseColor)}</td>`;
       } else if (col.type === 'price') {
@@ -720,11 +730,11 @@ function performanceColumns(yieldMode) {
 
 const trafficColumns = [
   { label: 'Instrument', field: 'name', type: 'text', sortable: false },
-  { label: 'Weekly<br>Trend', field: 'weekly_trend', type: 'dot' },
-  { label: 'Intermediate<br>Trend', field: 'inter_trend', type: 'dot', width: 132,
+  { label: 'Weekly<br>Trend', field: 'weekly_trend', type: 'dot', tip: 'wd' },
+  { label: 'Intermediate<br>Trend', field: 'inter_trend', type: 'dot', width: 132, tip: 'inter',
     title: 'Gate for opening new positions. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
-  { label: 'Daily<br>Trend', field: 'trend', type: 'dot' },
-  { label: 'H/L vs<br>10-day EMA', field: 'state_vs_10ema', type: 'dot', width: 112 },
+  { label: 'Daily<br>Trend', field: 'trend', type: 'dot', tip: 'wd' },
+  { label: 'H/L vs<br>10-day EMA', field: 'state_vs_10ema', type: 'dot', width: 112, tip: 'hl' },
   { label: 'RS Rank', field: 'rs_rank', type: 'rs',
     title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
   { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext',
@@ -1340,6 +1350,54 @@ function renderApp() {
 // ---------------------------------------------------------------------
 // Hover candlestick chart
 // ---------------------------------------------------------------------
+
+// ---- Traffic-light tooltips (custom popup, bullet per colour) ----
+const DOT_TIPS = {
+  wd: { title: (k) => (k === 'Weekly' ? 'Weekly trend' : 'Daily trend') + ': EMA cross + bar position', items: [
+    ['g', 'Green: uptrend. 10 EMA is above 20 EMA and the bar\'s low is above the 20 EMA.'],
+    ['y', 'Yellow: mixed or pulling back. Neither the green nor the red condition holds.'],
+    ['r', 'Red: downtrend. 10 EMA is below 20 EMA and the bar\'s high is below the 20 EMA.'] ] },
+  inter: { title: () => 'Intermediate trend: is it still making progress?', items: [
+    ['g', 'Green: trending with real progress. Price > 20 EMA > 50 SMA, both rising, a new 20-day high in the last 10 bars, and price above the 200-day.'],
+    ['y', 'Yellow: stalling or mixed. Skip new entries and tighten stops.'],
+    ['r', 'Red: downtrend. Price is below a falling 50 SMA.'] ] },
+  hl: { title: () => 'Today\'s high / low vs the 10 EMA', items: [
+    ['g', 'Green: today\'s low is above the 10 EMA (bullish).'],
+    ['y', 'No yellow here: the dot is grey when neither green nor red applies.'],
+    ['r', 'Red: 10 EMA is below 20 EMA and today\'s high is below the 10 EMA.'] ] },
+};
+(function initDotTips() {
+  const tip = document.createElement('div');
+  tip.id = 'dot-tip';
+  document.body.appendChild(tip);
+  let cur = null;
+  const place = e => {
+    const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + pad, y = e.clientY + pad;
+    if (x + w > window.innerWidth - 8) x = e.clientX - w - pad;
+    if (y + h > window.innerHeight - 8) y = e.clientY - h - pad;
+    tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+  };
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest && e.target.closest('[data-tip]');
+    if (!el) return;
+    if (el === cur) return;
+    cur = el;
+    const [key, kind] = el.getAttribute('data-tip').split(':');
+    const d = DOT_TIPS[key];
+    if (!d) return;
+    tip.innerHTML = `<h5>${d.title(kind)}</h5><ul>${d.items.map(([c, t]) => `<li class="${c}">${t}</li>`).join('')}</ul>`;
+    tip.style.display = 'block';
+    place(e);
+  });
+  document.addEventListener('mousemove', e => { if (cur) place(e); });
+  document.addEventListener('mouseout', e => {
+    if (!cur) return;
+    const to = e.relatedTarget;
+    if (!to || !cur.contains(to)) { tip.style.display = 'none'; cur = null; }
+  });
+})();
+
 const HOVER_DELAY_MS = 1000;
 const CLOSE_GRACE_MS = 300;
 const historyCache = {};
