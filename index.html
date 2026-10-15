@@ -277,6 +277,8 @@
   #dot-tip ul { list-style: none; margin: 0; padding: 0; }
   #dot-tip li { position: relative; padding: 2px 0 2px 18px; }
   #dot-tip li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+  #dot-tip li.a { --c: var(--accent); } #dot-tip li.n { --c: var(--dot-grey); }
+  #dot-tip .tip-note { margin: 6px 0 0; padding-top: 5px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
   #dot-tip li.g { --c: var(--dot-green); } #dot-tip li.y { --c: var(--dot-yellow); } #dot-tip li.r { --c: var(--dot-red); }
   #dot-tip li b { font-weight: 700; color: var(--text); }
 </style>
@@ -617,11 +619,11 @@ function renderTable(tableId) {
       } else if (col.type === 'bps') {
         html += `<td>${fmtBps(r[col.field])}</td>`;
       } else if (col.type === 'rs') {
-        html += `<td>${fmtRs(r.rs_rank, r.rs_rank_chg)}</td>`;
+        html += `<td data-tip="rs">${fmtRs(r.rs_rank, r.rs_rank_chg)}</td>`;
       } else if (col.type === 'ext') {
-        html += `<td>${fmtExt(r[col.field])}</td>`;
+        html += `<td data-tip="ext">${fmtExt(r[col.field])}</td>`;
       } else if (col.type === 'hi52') {
-        html += `<td>${fmtHi52(r.pct_from_52w_high, r.days_since_52w_high)}</td>`;
+        html += `<td data-tip="hi52">${fmtHi52(r.pct_from_52w_high, r.days_since_52w_high)}</td>`;
       } else if (col.type === 'rank') {
         html += `<td>${fmtRank(r[col.field])}</td>`;
       } else {
@@ -735,11 +737,11 @@ const trafficColumns = [
     title: 'Gate for opening new positions. Green: price > 20 EMA > 50 SMA, 50 SMA rising (10 bars) and 20 EMA rising (5 bars) by > 0.25 ATR, a new 20-day high within 10 bars, and price above the 200-day. Red: price below a falling 50 SMA. Otherwise yellow = stalling / mixed.' },
   { label: 'Daily<br>Trend', field: 'trend', type: 'dot', tip: 'wd' },
   { label: 'H/L vs<br>10-day EMA', field: 'state_vs_10ema', type: 'dot', width: 112, tip: 'hl' },
-  { label: 'RS Rank', field: 'rs_rank', type: 'rs',
+  { label: 'RS Rank', field: 'rs_rank', type: 'rs', tip: 'rs',
     title: 'Relative strength, 1-99, across all equity ETFs on this dashboard (weighted 3/6/9/12-month return, 40% on the latest quarter). Arrow = change vs. 1 week ago.' },
-  { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext',
+  { label: 'Ext (ATR)', field: 'ext_atr', type: 'ext', tip: 'ext',
     title: 'Distance from the 20-day EMA in ATR(14) units. 0 to 2 (green) = near support; 2 to 3 (yellow) = stretched; above 3 (red) = extended / chase risk; negative = below the 20 EMA.' },
-  { label: '52W High', field: 'pct_from_52w_high', type: 'hi52',
+  { label: '52W High', field: 'pct_from_52w_high', type: 'hi52', tip: 'hi52',
     title: '% below the 52-week closing high, and trading days since it. Amber = within 5% of the high.' },
 ];
 
@@ -1361,6 +1363,23 @@ const DOT_TIPS = {
     ['g', 'Green: trending with real progress. Price > 20 EMA > 50 SMA, both rising, a new 20-day high in the last 10 bars, and price above the 200-day.'],
     ['y', 'Yellow: stalling or mixed. Skip new entries and tighten stops.'],
     ['r', 'Red: downtrend. Price is below a falling 50 SMA.'] ] },
+  rs: { title: () => 'RS rank: 1-99 across all equity ETFs', items: [
+    ['g', 'Green (80-99): leader, top 20% by relative strength.'],
+    ['n', '21-79: middle of the pack.'],
+    ['r', 'Red (1-20): laggard, bottom 20%.'],
+    ['n', 'Arrow: change in rank vs 1 week ago.'] ],
+    note: 'Weighted 3/6/9/12-month return, 40% on the latest quarter.' },
+  ext: { title: () => 'Ext (ATR): distance above the 20 EMA', items: [
+    ['g', 'Green (0 to 2): near support. Low-risk entry zone.'],
+    ['y', 'Yellow (2 to 3): stretched. Be selective.'],
+    ['r', 'Red (above 3): extended. Chasing risk.'],
+    ['n', 'Grey (negative): price is below the 20 EMA.'] ],
+    note: 'Measured in ATR(14) units.' },
+  hi52: { title: () => '52-week high: how close, how recent', items: [
+    ['a', 'NEW HI: closed at a new 52-week high.'],
+    ['a', 'Amber: within 5% of the 52-week closing high.'],
+    ['n', 'Grey: more than 5% below the high.'] ],
+    note: 'The % is distance below the 52-week closing high; the number of days is how long ago it was set.' },
   hl: { title: () => 'Today\'s high / low vs the 10 EMA', items: [
     ['g', 'Green: today\'s low is above the 10 EMA (bullish).'],
     ['y', 'No yellow here: the dot is grey when neither green nor red applies.'],
@@ -1386,7 +1405,7 @@ const DOT_TIPS = {
     const [key, kind] = el.getAttribute('data-tip').split(':');
     const d = DOT_TIPS[key];
     if (!d) return;
-    tip.innerHTML = `<h5>${d.title(kind)}</h5><ul>${d.items.map(([c, t]) => `<li class="${c}">${t}</li>`).join('')}</ul>`;
+    tip.innerHTML = `<h5>${d.title(kind)}</h5><ul>${d.items.map(([c, t]) => `<li class="${c}">${t}</li>`).join('')}</ul>${d.note ? `<p class="tip-note">${d.note}</p>` : ''}`;
     tip.style.display = 'block';
     place(e);
   });
