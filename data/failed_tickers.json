@@ -1,10 +1,4 @@
 {
-  "checked_utc": "2026-10-23T00:21:37.377917+00:00",
-  "failed": [
-    {
-      "ticker": "SOL-USD",
-      "name": "Solana",
-      "section": "macro.crypto"
-    }
-  ]
+  "checked_utc": "2026-10-24T00:11:49.897798+00:00",
+  "failed": []
 }
