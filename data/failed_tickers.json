@@ -1,10 +1,4 @@
 {
-  "checked_utc": "2026-10-28T00:54:53.927814+00:00",
-  "failed": [
-    {
-      "ticker": "^TNX",
-      "name": "10-Year Treasury",
-      "section": "macro.yields"
-    }
-  ]
+  "checked_utc": "2026-10-29T01:29:18.177882+00:00",
+  "failed": []
 }
