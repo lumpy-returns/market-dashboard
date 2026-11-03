@@ -1,32 +1,7 @@
 {
-  "updated_utc": "2026-10-03T08:04:29+00:00",
+  "updated_utc": "2026-11-03T09:12:37+00:00",
   "window_months": 6,
   "events": [
-    {
-      "ticker": "IVEP",
-      "theme": "AI Power & Infrastructure",
-      "event": "Listed",
-      "date": "2026-04-08",
-      "issuer": "Wedbush / Dan Ives",
-      "source": "etfdb.com"
-    },
-    {
-      "ticker": "REXC",
-      "theme": "Rare Earths ex-China",
-      "event": "Listed",
-      "date": "2026-04-14",
-      "issuer": "Sprott",
-      "source": "stockanalysis.com"
-    },
-    {
-      "ticker": "SECU",
-      "theme": "Securitized Debt / MBS",
-      "event": "Listed",
-      "date": "2026-05-01",
-      "date_precision": "approximate",
-      "issuer": "iShares",
-      "source": "wealthmanagement.com"
-    },
     {
       "ticker": "IQMM",
       "theme": "Stablecoin-Compliant Money Market",
@@ -141,6 +116,87 @@
       "date": "2026-09-29",
       "issuer": "Bitwise",
       "source": "theblock.co"
+    },
+    {
+      "ticker": "LLMA",
+      "theme": "Large Language Models / Generative AI",
+      "event": "Listed",
+      "date": "2026-10-04",
+      "date_precision": "approximate",
+      "issuer": "Global X",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "PEPT",
+      "theme": "GLP-1 / Peptide Therapeutics",
+      "event": "Listed",
+      "date": "2026-10-11",
+      "date_precision": "approximate",
+      "issuer": "REX Shares",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "ACHP",
+      "theme": "Asia Semiconductors",
+      "event": "Listed",
+      "date": "2026-10-11",
+      "date_precision": "approximate",
+      "issuer": "Global X",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "RBTX",
+      "theme": "Robotics & Future Technologies (Active)",
+      "event": "Listed",
+      "date": "2026-10-18",
+      "date_precision": "approximate",
+      "issuer": "iShares",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "SMRZ",
+      "theme": "Small Modular Nuclear Reactors",
+      "event": "Listed",
+      "date": "2026-10-18",
+      "date_precision": "approximate",
+      "issuer": "Global X",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "AIBN",
+      "theme": "AI Infrastructure (Bond-Wrapped)",
+      "event": "Listed",
+      "date": "2026-10-18",
+      "date_precision": "approximate",
+      "issuer": "Defiance",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "FBEQ",
+      "theme": "Bitcoin-Linked US Equity Income (DRIP Index)",
+      "event": "Listed",
+      "date": "2026-10-25",
+      "date_precision": "approximate",
+      "issuer": "Franklin Templeton",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "FIBT",
+      "theme": "Bitcoin + Innovation Equity Income (DRIP Index)",
+      "event": "Listed",
+      "date": "2026-10-25",
+      "date_precision": "approximate",
+      "issuer": "Franklin Templeton",
+      "source": "etfexpress.com"
+    },
+    {
+      "ticker": "SMNG",
+      "theme": "Samsung Group (Single Conglomerate)",
+      "event": "Listed",
+      "date": "2026-10-25",
+      "date_precision": "approximate",
+      "issuer": "xETFs",
+      "source": "etfexpress.com"
     }
   ]
 }
