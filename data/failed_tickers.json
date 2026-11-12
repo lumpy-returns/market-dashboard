@@ -1,10 +1,10 @@
 {
-  "checked_utc": "2026-11-11T01:40:17.734768+00:00",
+  "checked_utc": "2026-11-12T02:39:34.132247+00:00",
   "failed": [
     {
-      "ticker": "XLY",
-      "name": "Cons Discretionary",
-      "section": "equities.sectors"
+      "ticker": "SHLD",
+      "name": "Defense Tech",
+      "section": "equities.themes"
     }
   ]
 }
