@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#000000">
+<script>try{if(localStorage.getItem("md_theme")==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}</script>
 <title>Market Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,39 @@
     --dot-yellow: #ffcc00;
     --dot-grey: #5a5a54;
     --improving: #3fb8ff;
+    --tip-bg: #0a0a0a;
+    --accent-tint: rgba(255,159,10,0.08);
+    --row-hover: rgba(255,159,10,0.10);
+    --row-hover-solid: #211a0d;
+    --on-accent: #000000;
+    --shadow: rgba(0,0,0,0.7);
+    color-scheme: dark;
   }
+  :root[data-theme="light"] {
+    --bg: #f4f2ea;
+    --panel: #ffffff;
+    --panel-hover: #efede4;
+    --border: #d8d4c6;
+    --text: #1d1d19;
+    --muted: #66665e;
+    --up: #087a37;
+    --down: #cc2a20;
+    --neutral-dot: #b45f06;
+    --accent: #b45f06;
+    --dot-green: #16a249;
+    --dot-red: #e0352b;
+    --dot-yellow: #e6b000;
+    --dot-grey: #b9b6a9;
+    --improving: #1a73b8;
+    --tip-bg: #ffffff;
+    --accent-tint: rgba(180,95,6,0.09);
+    --row-hover: rgba(180,95,6,0.10);
+    --row-hover-solid: #f6e9d4;
+    --on-accent: #ffffff;
+    --shadow: rgba(0,0,0,0.18);
+    color-scheme: light;
+  }
+  :root[data-theme="light"] .guide-img { filter: invert(1) hue-rotate(180deg); }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -70,7 +103,7 @@
   .seg button { margin-left: -1px; }
   .seg button:first-child { margin-left: 0; }
   .seg button.active { position: relative; z-index: 1; }
-  .toolbar-row button.active { color: var(--accent); border-color: var(--accent); background: rgba(255,159,10,0.08); }
+  .toolbar-row button.active { color: var(--accent); border-color: var(--accent); background: var(--accent-tint); }
 
   .mini-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 28px 0; }
   .mini-chart-card { border: 1px solid var(--border); background: var(--panel); padding: 8px 10px; }
@@ -175,7 +208,7 @@
     width: 480px;
     background: var(--panel);
     border: 1px solid var(--accent);
-    box-shadow: 0 0 24px rgba(255,159,10,0.12), 0 12px 32px rgba(0,0,0,0.6);
+    box-shadow: 0 0 24px var(--accent-tint), 0 12px 32px var(--shadow);
     font-family: "Manrope", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   }
   .chart-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); }
@@ -206,8 +239,8 @@
   .regime-score { font-size: 12px; color: var(--muted); }
   .regime-checks { display: flex; flex-wrap: wrap; gap: 5px; }
   .regime-chip { font-size: 11px; border: 1px solid var(--border); padding: 1px 7px; color: var(--muted); cursor: help; }
-  .regime-chip.pass { border-color: rgba(0,217,100,0.45); color: var(--up); }
-  .regime-chip.fail { border-color: rgba(255,59,48,0.45); color: var(--down); }
+  .regime-chip.pass { border-color: color-mix(in srgb, var(--up) 45%, transparent); color: var(--up); }
+  .regime-chip.fail { border-color: color-mix(in srgb, var(--down) 45%, transparent); color: var(--down); }
   .regime-chip .chip-detail { color: var(--muted); margin-left: 5px; }
 
   /* What-changed feed */
@@ -265,14 +298,16 @@
   }
 
   .hdr-right { display:flex; align-items:baseline; gap:14px; }
+  .theme-btn { background:var(--panel); color:var(--muted); border:1px solid var(--border); width:30px; height:24px; font:inherit; font-size:14px; line-height:1; cursor:pointer; padding:0; }
+  .theme-btn:hover { color:var(--accent); border-color:var(--accent); }
   .lang-toggle { display:inline-flex; border:1px solid var(--border); }
   .lang-toggle button { background:var(--panel); color:var(--muted); border:0; padding:3px 9px; font:inherit; font-size:11px; cursor:pointer; }
   .lang-toggle button + button { border-left:1px solid var(--border); }
-  .lang-toggle button.active { color:#000; background:var(--accent); font-weight:700; }
+  .lang-toggle button.active { color:var(--on-accent); background:var(--accent); font-weight:700; }
   html[lang="zh-Hant"] h1, html[lang="zh-Hant"] th, html[lang="zh-Hant"] .toolbar-label { letter-spacing:0; text-transform:none; }
 
-  #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td { background: rgba(255,159,10,0.10); }
-  #dot-tip { position: fixed; z-index: 60; display: none; max-width: 340px; background: #0a0a0a; border: 1px solid var(--accent); padding: 8px 12px 9px; font-size: 12px; font-weight: 500; line-height: 1.45; color: var(--text); pointer-events: none; box-shadow: 0 4px 18px rgba(0,0,0,0.7); }
+  #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td { background: var(--row-hover); }
+  #dot-tip { position: fixed; z-index: 60; display: none; max-width: 340px; background: var(--tip-bg); border: 1px solid var(--accent); padding: 8px 12px 9px; font-size: 12px; font-weight: 500; line-height: 1.45; color: var(--text); pointer-events: none; box-shadow: 0 4px 18px var(--shadow); }
   #dot-tip h5 { margin: 0 0 5px; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; font-weight: 700; }
   #dot-tip ul { list-style: none; margin: 0; padding: 0; }
   #dot-tip li { position: relative; padding: 2px 0 2px 18px; }
@@ -287,7 +322,11 @@
     body { padding: 12px; }
     header { flex-wrap: wrap; gap: 8px; padding-bottom: 10px; margin-bottom: 12px; }
     h1 { font-size: 15px; }
-    .hdr-right { width: 100%; justify-content: space-between; }
+    .hdr-right { width: 100%; justify-content: space-between; align-items: center; }
+    #last-updated { flex: 1; min-width: 0; }
+    .lang-toggle, .theme-btn { flex-shrink: 0; }
+    .lang-toggle button { white-space: nowrap; padding: 5px 10px; }
+    .theme-btn { width: 36px; height: 30px; font-size: 16px; }
     .toolbar-row { flex-wrap: wrap; row-gap: 6px; }
     .toolbar-label { width: 100%; }
     .toolbar-row button { padding: 8px 12px; font-size: 12px; }
@@ -302,14 +341,13 @@
     .change-item .nm { width: auto; flex: 1 1 0; }
     .change-item .delta { flex-shrink: 0; }
     /* Tables scroll sideways inside their own wrapper; the Instrument column stays pinned */
-    #app table:not(.guide-table) col:first-child { width: 118px !important; }
+    #app table:not(.guide-table) col:first-child { width: 154px !important; }
     #app table:not(.guide-table) th:first-child,
     #app table:not(.guide-table) td:first-child { position: sticky; left: 0; z-index: 2; background: var(--panel); box-shadow: 1px 0 0 var(--border); padding-left: 8px; padding-right: 6px; }
-    #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td:first-child { background: #211a0d; }
+    #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td:first-child { background: var(--row-hover-solid); }
     #app table:not(.guide-table) col:nth-child(n+2) { width: 88px !important; }
     #app table:not(.guide-table) col:last-child { width: 96px !important; }
     #app table:not(.guide-table):has(.tk-slot) col:first-child { width: 86px !important; }
-    #app table:not(.guide-table) th { font-size: 10px; }
     #app table:not(.guide-table) th:first-child { padding-right: 2px; }
     #app table:not(.guide-table) th:not(:first-child), #app table:not(.guide-table) td:not(:first-child) { padding-left: 4px; padding-right: 4px; }
     #app td:first-child .tk-slot + .neutral { display: none; }          /* ticker only; name is on the chart/quote page */
@@ -319,6 +357,20 @@
     .regime-chip { font-size: 10px; }
     #dot-tip { max-width: calc(100vw - 24px); }
     #chart-panel { display: none !important; }
+
+    /* Minimum readable sizes on phones */
+    .toolbar-label, .seg-label, .regime-kicker, .collapse-hint, .hold-head, .hold-total, .chip-detail, .changes-col h4, .change-item .delta, .change-item .dots, .quad h4 { font-size: 12px; }
+    .regime-chip, .regime-score, .lang-toggle button, #last-updated, .section-sub, .changes summary, .quad-item, .subtable-label, .guide-note, .role-job { font-size: 13px; }
+    .hold-name, .hold-rank, .hold-sym, .hold-w { font-size: 13px; }
+    .change-item { font-size: 13px; }
+    .change-item .sig { font-size: 11px; width: 86px; }
+    .toolbar-row button { font-size: 13px; }
+    .mini-chart-card-name { font-size: 12px; }
+    .badge { font-size: 11px; }
+    .delta { font-size: 11px; }
+    #app table:not(.guide-table) th { font-size: 12px; text-transform: none; }
+    #app table:not(.guide-table) td { font-size: 14px; }
+    #dot-tip { font-size: 13px; } #dot-tip h5 { font-size: 12px; } #dot-tip .tip-note { font-size: 12px; }
   }
   @media (max-width: 420px) { .mini-chart-grid { grid-template-columns: 1fr; } }
 </style>
@@ -329,6 +381,7 @@
   <h1>Market Dashboard</h1>
   <div class="hdr-right">
     <div id="last-updated">Loading...</div>
+    <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Switch to light theme" title="Switch to light theme">☀</button>
     <div class="lang-toggle" role="group" aria-label="Language">
       <button id="lang-en" onclick="setLang('en')">EN</button>
       <button id="lang-zh" onclick="setLang('zh')">繁體</button>
@@ -395,6 +448,27 @@
 <script>
 /* ---- Language toggle (EN / Traditional Chinese). Translates rendered text in place;
         translations live in i18n_zh.js. Missing strings stay English. ---- */
+
+// ---- Light / dark theme ----
+function applyTheme(t) {
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  const btn = document.getElementById('theme-btn');
+  if (btn) {
+    btn.textContent = t === 'light' ? '☾' : '☀';
+    const label = t === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+    btn.setAttribute('aria-label', label); btn.setAttribute('title', label);
+  }
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', t === 'light' ? '#f4f2ea' : '#000000');
+}
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  try { localStorage.setItem('md_theme', next); } catch (e) {}
+  applyTheme(next);
+}
+document.addEventListener('DOMContentLoaded', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'));
+
 let LANG = 'en';
 try { LANG = localStorage.getItem('md_lang') === 'zh' ? 'zh' : 'en'; } catch (e) {}
 const MONTHS = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
@@ -1129,11 +1203,14 @@ function headingArrow(points) {
   const [x1, y1] = points[points.length - 2], [x2, y2] = points[points.length - 1];
   return (y2 >= y1 ? (x2 >= x1 ? '↗' : '↖') : (x2 >= x1 ? '↘' : '↙'));
 }
+window.matchMedia('(max-width: 700px)').addEventListener('change', () => { if (typeof currentView !== 'undefined' && currentView === 'rotation') renderApp(); });
 function setRrgGroup(g) { rrgGroup = g; rrgTails = null; renderApp(); }
 function toggleRrgTails() { rrgTails = !(rrgTails === null ? rrgGroup === 'sectors' : rrgTails); renderApp(); }
 
 function buildRrgSvg(items, tails) {
-  const W = 1000, H = 600, P = 34;
+  const M = window.matchMedia('(max-width: 700px)').matches;
+  const W = M ? 380 : 1000, H = M ? 470 : 600, P = M ? 30 : 34;
+  const K = M ? 1.25 : 1; // font scale: the phone chart is drawn ~1:1, so labels stay readable
   const shown = items.map(it => ({ ...it, pts: tails ? it.points : it.points.slice(-1) }));
   let dx = 1.5, dy = 1.5;
   shown.forEach(it => it.pts.forEach(([x, y]) => {
@@ -1150,13 +1227,13 @@ function buildRrgSvg(items, tails) {
   svg += `<line x1="${P}" x2="${W - P}" y1="${cy}" y2="${cy}" stroke="var(--border)"/>
           <line x1="${cx}" x2="${cx}" y1="${P}" y2="${H - P}" stroke="var(--border)"/>`;
   const corner = (key, x, y, anchor) =>
-    `<text x="${x}" y="${y}" font-size="13" font-weight="700" fill="${QUADS[key].color}" text-anchor="${anchor}" opacity="0.85">${QUADS[key].label.toUpperCase()}</text>`;
+    `<text x="${x}" y="${y}" font-size="${13 * K}" font-weight="700" fill="${QUADS[key].color}" text-anchor="${anchor}" opacity="0.85">${QUADS[key].label.toUpperCase()}</text>`;
   svg += corner('improving', P + 8, P + 18, 'start') + corner('leading', W - P - 8, P + 18, 'end') +
          corner('lagging', P + 8, H - P - 10, 'start') + corner('weakening', W - P - 8, H - P - 10, 'end');
-  svg += `<text x="${W - P}" y="${cy - 6}" font-size="10" fill="var(--muted)" text-anchor="end">RS-RATIO →</text>
-          <text x="${cx + 6}" y="${P + 10}" font-size="10" fill="var(--muted)">↑ RS-MOMENTUM</text>
-          <text x="${P}" y="${H - P + 16}" font-size="9" fill="var(--muted)">${(100 - dx).toFixed(1)}</text>
-          <text x="${W - P}" y="${H - P + 16}" font-size="9" fill="var(--muted)" text-anchor="end">${(100 + dx).toFixed(1)}</text>`;
+  svg += `<text x="${W - P}" y="${cy - 6}" font-size="${10 * K}" fill="var(--muted)" text-anchor="end">RS-RATIO →</text>
+          <text x="${cx + 6}" y="${P + 10 + (M ? 26 : 0)}" font-size="${10 * K}" fill="var(--muted)">↑ RS-MOMENTUM</text>
+          <text x="${P}" y="${H - P + 16}" font-size="${9 * K}" fill="var(--muted)">${(100 - dx).toFixed(1)}</text>
+          <text x="${W - P}" y="${H - P + 16}" font-size="${9 * K}" fill="var(--muted)" text-anchor="end">${(100 + dx).toFixed(1)}</text>`;
   shown.forEach(it => {
     const head = it.pts[it.pts.length - 1];
     const color = QUADS[quadrantOf(head)].color;
@@ -1168,7 +1245,7 @@ function buildRrgSvg(items, tails) {
     }
     const hx = X(head[0]).toFixed(1), hy = Y(head[1]).toFixed(1);
     svg += `<circle cx="${hx}" cy="${hy}" r="5" fill="${color}"><title>${it.ticker} ${it.name} — RS-Ratio ${head[0].toFixed(2)}, RS-Momentum ${head[1].toFixed(2)}</title></circle>`;
-    svg += `<text class="ticker-link" data-ticker="${escapeAttr(it.ticker)}" data-name="${escapeAttr(it.name)}" x="${(+hx + 7).toFixed(1)}" y="${(+hy + 3.5).toFixed(1)}" font-size="10.5" fill="var(--text)">${it.ticker}</text>`;
+    svg += `<text class="ticker-link" data-ticker="${escapeAttr(it.ticker)}" data-name="${escapeAttr(it.name)}" x="${(+hx + 7).toFixed(1)}" y="${(+hy + 3.5).toFixed(1)}" font-size="${10.5 * K}" fill="var(--text)">${it.ticker}</text>`;
   });
   return svg + '</svg>';
 }

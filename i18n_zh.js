@@ -103,6 +103,7 @@ window.ZH = {
 "Amber: within 5% of the 52-week closing high.":"琥珀色：距 52 週收盤高點 5% 以內。",
 "Grey: more than 5% below the high.":"灰色：低於高點超過 5%。",
 "The % is distance below the 52-week closing high; the number of days is how long ago it was set.":"百分比為低於 52 週收盤高點的幅度；天數為該高點距今多久。",
+"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題",
 // ---- names: macro ----
 "10-Year Treasury":"10年期公債","30-Year Treasury":"30年期公債","10Y − 3M Spread":"10年減3個月利差",
 "WTI Crude":"WTI 原油","Brent Crude":"布蘭特原油","Natural Gas":"天然氣","VIX":"VIX 恐慌指數","US Dollar Index":"美元指數",
