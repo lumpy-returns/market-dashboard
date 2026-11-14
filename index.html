@@ -281,6 +281,46 @@
   #dot-tip .tip-note { margin: 6px 0 0; padding-top: 5px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
   #dot-tip li.g { --c: var(--dot-green); } #dot-tip li.y { --c: var(--dot-yellow); } #dot-tip li.r { --c: var(--dot-red); }
   #dot-tip li b { font-weight: 700; color: var(--text); }
+
+  /* ---- Phone layout ---- */
+  @media (max-width: 700px) {
+    body { padding: 12px; }
+    header { flex-wrap: wrap; gap: 8px; padding-bottom: 10px; margin-bottom: 12px; }
+    h1 { font-size: 15px; }
+    .hdr-right { width: 100%; justify-content: space-between; }
+    .toolbar-row { flex-wrap: wrap; row-gap: 6px; }
+    .toolbar-label { width: 100%; }
+    .toolbar-row button { padding: 8px 12px; font-size: 12px; }
+    .toolbar-row .seg-label { flex-basis: 100%; margin: 4px 0 0 !important; }
+    .section-head .section-title { font-size: 19px; }
+    /* What Changed feed: let the name flex instead of a fixed width */
+    .changes-body { padding: 2px 10px 8px; max-height: 320px; grid-template-columns: minmax(0, 1fr); }
+    .changes-col { min-width: 0; }
+    .change-item { gap: 6px; }
+    .change-item .sig { width: 76px; font-size: 9px; }
+    .change-item .chg-tk { width: 62px; }
+    .change-item .nm { width: auto; flex: 1 1 0; }
+    .change-item .delta { flex-shrink: 0; }
+    /* Tables scroll sideways inside their own wrapper; the Instrument column stays pinned */
+    #app table:not(.guide-table) col:first-child { width: 118px !important; }
+    #app table:not(.guide-table) th:first-child,
+    #app table:not(.guide-table) td:first-child { position: sticky; left: 0; z-index: 2; background: var(--panel); box-shadow: 1px 0 0 var(--border); padding-left: 8px; padding-right: 6px; }
+    #app table:not(.guide-table) tbody tr:not(.holdings-row):hover td:first-child { background: #211a0d; }
+    #app table:not(.guide-table) col:nth-child(n+2) { width: 88px !important; }
+    #app table:not(.guide-table) col:last-child { width: 96px !important; }
+    #app table:not(.guide-table):has(.tk-slot) col:first-child { width: 86px !important; }
+    #app table:not(.guide-table) th { font-size: 10px; }
+    #app table:not(.guide-table) th:first-child { padding-right: 2px; }
+    #app table:not(.guide-table) th:not(:first-child), #app table:not(.guide-table) td:not(:first-child) { padding-left: 4px; padding-right: 4px; }
+    #app td:first-child .tk-slot + .neutral { display: none; }          /* ticker only; name is on the chart/quote page */
+    .holdings-row td { white-space: normal; }
+    .hold-grid { grid-template-columns: 1fr; }
+    .mini-chart-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .regime-chip { font-size: 10px; }
+    #dot-tip { max-width: calc(100vw - 24px); }
+    #chart-panel { display: none !important; }
+  }
+  @media (max-width: 420px) { .mini-chart-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -1563,6 +1603,7 @@ function initChartHover() {
   const panel = document.getElementById('chart-panel');
 
   document.addEventListener('mouseover', (e) => {
+    if (window.matchMedia('(hover: none)').matches) return; // touch: no hover charts
     const link = e.target.closest && e.target.closest('.ticker-link');
     if (!link) return;
     if (hoverTimer) clearTimeout(hoverTimer);
