@@ -1,4 +1,10 @@
 {
-  "checked_utc": "2026-11-14T01:56:36.659174+00:00",
-  "failed": []
+  "checked_utc": "2026-11-17T04:17:38.600501+00:00",
+  "failed": [
+    {
+      "ticker": "EWC",
+      "name": "Canada",
+      "section": "equities.countries_developed"
+    }
+  ]
 }
