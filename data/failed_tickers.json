@@ -1,4 +1,10 @@
 {
-  "checked_utc": "2026-11-26T03:54:16.651663+00:00",
-  "failed": []
+  "checked_utc": "2026-11-27T03:54:34.061613+00:00",
+  "failed": [
+    {
+      "ticker": "RSPT",
+      "name": "Technology",
+      "section": "equities.sectors_ew"
+    }
+  ]
 }
